@@ -5,18 +5,19 @@
  catch(e){M.notice(e.message,true);return;}
  const actions={offered:[['accept','Aceptar'],['reject','Rechazar']],accepted:[['start','Iniciar carrera']],inprogress:[['complete','Finalizar carrera']]};
  function mapCurrent(){
-  if(selected!==lastMapSelection){map.clearRoute();lastMapSelection=selected;}
-  const t=allTrips.find(x=>x.id===selected);if(!t){map.clearRoute();return;}
+  const t=allTrips.find(x=>x.id===selected);if(!t){map.clearRoute();lastMapSelection=null;return;}
+  const changed=selected!==lastMapSelection;
+  if(changed){map.clearRoute();lastMapSelection=selected;}
   const points=[];
   if(MetroMap.good(t.pickup_lat,t.pickup_lng))points.push({lat:t.pickup_lat,lng:t.pickup_lng,name:'Recogida MT-'+t.id,kind:'pickup'});
   if(MetroMap.good(t.dest_lat,t.dest_lng))points.push({lat:t.dest_lat,lng:t.dest_lng,name:'Destino MT-'+t.id,kind:'destination'});
   const loc=currentDriver?.location;if(loc&&MetroMap.good(loc.lat,loc.lng))points.push({lat:loc.lat,lng:loc.lng,name:'Mi GPS real reciente',kind:'driver'});
-  map.update(points,true);
-  const a=(t.status==='accepted'&&loc&&MetroMap.good(t.pickup_lat,t.pickup_lng))?{lat:loc.lat,lng:loc.lng}:
-          (t.status==='inprogress'&&MetroMap.good(t.pickup_lat,t.pickup_lng))?{lat:t.pickup_lat,lng:t.pickup_lng}:null;
-  const b=t.status==='accepted'?{lat:t.pickup_lat,lng:t.pickup_lng}:
-          (t.status==='inprogress'&&MetroMap.good(t.dest_lat,t.dest_lng))?{lat:t.dest_lat,lng:t.dest_lng}:null;
-  if(a&&b)map.route(a,b);else map.clearRoute();
+  map.update(points,changed);
+  const next=t.status==='accepted'?{lat:t.pickup_lat,lng:t.pickup_lng}:
+    t.status==='inprogress'?{lat:t.dest_lat,lng:t.dest_lng}:null;
+  const start=loc&&MetroMap.good(loc.lat,loc.lng)?{lat:loc.lat,lng:loc.lng}:null;
+  const a=start||(t.status==='inprogress'&&MetroMap.good(t.pickup_lat,t.pickup_lng)?{lat:t.pickup_lat,lng:t.pickup_lng}:null);
+  if(a&&next&&MetroMap.good(next.lat,next.lng))map.route(a,next,{fit:changed});else map.clearRoute();
  }
  async function load(){if(busy)return;busy=true;
   try{const data=await M.api('/api/mine'),d=data.driver;currentDriver=d;allTrips=data.trips;

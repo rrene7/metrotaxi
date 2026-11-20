@@ -1,5 +1,5 @@
 'use strict';(async()=>{
- const M=MTCloud, el=id=>document.getElementById(id);let coords=null,destCoords=null,logged=false,lastTrips=[],selected=null,lastMapSelection=null;
+ const M=MTCloud, el=id=>document.getElementById(id);let coords=null,destCoords=null,logged=false,lastTrips=[],selected=null,lastMapSelection=null,trackingActive=false,roadView=false;
  const token=new URLSearchParams(location.search).get('referido')||'';
  const map=MetroMap.make({id:'map-cliente',onChoose:(type,lat,lng)=>{
    if(type==='pickup'){coords={pickup_lat:lat,pickup_lng:lng};if(!el('pickup').value)el('pickup').value='Punto marcado en el mapa';M.text('gps-info',`Recogida marcada: ${lat.toFixed(5)}, ${lng.toFixed(5)}. Confirma la referencia.`)}
@@ -8,16 +8,24 @@
  }});
  async function verifyReferral(){if(!token)return;try{const r=await M.api('/api/referral/'+encodeURIComponent(token));el('referral-info').textContent=`Registro por QR de la unidad ${r.unit} (${r.station}). Tu cuenta y las próximas carreras serán administradas por Metro Taxi.`;el('referral-info').classList.remove('hidden');}catch(_){el('referral-info').textContent='QR no válido o revocado. Puedes registrarte normalmente en Metro Taxi, sin atribución al conductor.';el('referral-info').classList.remove('hidden');}}
  function showSelected(){
-  if(selected!==lastMapSelection){map.clearRoute();lastMapSelection=selected;}
+  const changed=selected!==lastMapSelection;
+  if(changed){map.clearRoute();lastMapSelection=selected;roadView=false;}
   if(selected){const t=lastTrips.find(x=>x.id===selected);
    if(t){const p=[];
     if(MetroMap.good(t.pickup_lat,t.pickup_lng))p.push({lat:t.pickup_lat,lng:t.pickup_lng,kind:'pickup',name:'Recogida MT-'+t.id});
     if(MetroMap.good(t.dest_lat,t.dest_lng))p.push({lat:t.dest_lat,lng:t.dest_lng,kind:'destination',name:'Destino MT-'+t.id});
     if(t.driver?.confirmed && t.driver.location && MetroMap.good(t.driver.location.lat,t.driver.location.lng))p.push({lat:t.driver.location.lat,lng:t.driver.location.lng,kind:'driver',name:t.driver.name,detail:'GPS real reciente '+t.driver.location.updated_at});
-    map.update(p,true);return;}}
+    map.update(p,changed);
+    if(trackingActive && !roadView){
+      const segment=MetroTracking.segment(t,MetroMap.good);
+      if(segment){map.route(segment.start,segment.end,{fit:changed});el('tracking-info').textContent=segment.live?'GPS del taxista actualizado: '+t.driver.location.updated_at+'. Línea punteada: distancia directa, no tiempo de llegada.':'Sin GPS reciente del taxista. Se muestra solo el trayecto de referencia entre recogida y destino.';}
+      else {map.clearRoute();el('tracking-info').textContent='Esperando ubicación GPS reciente y puntos válidos para el recorrido.';}
+    }
+    return;}}
   const p=[];if(coords&&MetroMap.good(coords.pickup_lat,coords.pickup_lng))p.push({lat:coords.pickup_lat,lng:coords.pickup_lng,kind:'pickup',name:'Mi recogida marcada'});
   if(destCoords&&MetroMap.good(destCoords.dest_lat,destCoords.dest_lng))p.push({lat:destCoords.dest_lat,lng:destCoords.dest_lng,kind:'destination',name:'Mi destino marcado'});
   map.update(p,p.length>0);
+  if(trackingActive){map.clearRoute();el('tracking-info').textContent='Selecciona una carrera activa para iniciar el seguimiento.';}
  }
  async function render(){try{const s=await M.me();logged=s.authenticated&&s.user.role==='customer';el('auth').classList.toggle('hidden',logged);el('account').classList.toggle('hidden',!logged);if(logged)await load();else if(s.authenticated)M.notice('Una sesión de personal está abierta. Usa una ventana privada para la cuenta del pasajero.',true)}catch(e){M.notice(e.message,true)}}
  async function load(){if(!logged)return;try{const [data,ms]=await Promise.all([M.api('/api/customer/trips'),M.api('/api/messages')]);lastTrips=data.trips;el('account-label').textContent=data.account.name+' · '+data.account.phone+' · Teléfono no verificado';
@@ -35,15 +43,13 @@
  el('gps').addEventListener('click',()=>{if(!navigator.geolocation)return M.notice('GPS no disponible; indica referencia manual',true);M.text('gps-info','Solicitando autorización GPS...');navigator.geolocation.getCurrentPosition(pos=>{coords={pickup_lat:pos.coords.latitude,pickup_lng:pos.coords.longitude,pickup_accuracy_m:pos.coords.accuracy};el('gps-info').textContent=`GPS autorizado · precisión ±${Math.round(pos.coords.accuracy)} m. Verifica la entrada.`;if(!el('pickup').value)el('pickup').value='Mi ubicación actual';showSelected();},err=>{coords=null;M.text('gps-info','GPS no disponible: '+err.message+'. Marca el mapa o usa referencia.')},{enableHighAccuracy:true,timeout:20000,maximumAge:0});});
  el('pick-pickup').addEventListener('click',()=>map.pick('pickup'));
  el('pick-destination').addEventListener('click',()=>map.pick('destination'));
- el('request').addEventListener('submit',async e=>{e.preventDefault();try{const b={station:el('station').value,pickup:el('pickup').value,destination:el('dest').value,reference:el('reference').value,consent:el('trip-consent').checked,...(coords||{}),...(destCoords||{})};const r=await M.api('/api/requests','POST',b);M.notice('Carrera #MT-'+r.id+' enviada a la central');selected=r.id;coords=null;destCoords=null;el('request').reset();M.text('gps-info','Sin coordenadas nuevas.');await load()}catch(err){M.notice(err.message,true)}});
- async function showRoute(tid,byRoad=false){selected=tid;showSelected();const t=lastTrips.find(x=>x.id===tid);if(!t)return;
-  const pickup=MetroMap.good(t.pickup_lat,t.pickup_lng)?{lat:t.pickup_lat,lng:t.pickup_lng}:null;
-  const destiny=MetroMap.good(t.dest_lat,t.dest_lng)?{lat:t.dest_lat,lng:t.dest_lng}:null;
-  const loc=t.driver?.confirmed?t.driver?.location:null;
-  const driver=loc&&MetroMap.good(loc.lat,loc.lng)?{lat:loc.lat,lng:loc.lng}:null;
-  const start=driver||pickup,end=driver?pickup:destiny;
-  if(!start||!end){M.notice('Faltan dos puntos GPS para trazar recorrido. Consulta la referencia o espera GPS del taxista.',true);return;}
-  if(byRoad){await map.streetRoute(start,end)}else{await map.route(start,end)}
+ el('request').addEventListener('submit',async e=>{e.preventDefault();try{const b={station:el('station').value,pickup:el('pickup').value,destination:el('dest').value,reference:el('reference').value,consent:el('trip-consent').checked,...(coords||{}),...(destCoords||{})};const r=await M.api('/api/requests','POST',b);M.notice('Carrera #MT-'+r.id+' enviada a la central');selected=r.id;trackingActive=true;roadView=false;coords=null;destCoords=null;el('request').reset();M.text('gps-info','Sin coordenadas nuevas.');await load()}catch(err){M.notice(err.message,true)}});
+ async function showRoute(tid,byRoad=false){
+  selected=tid;trackingActive=true;showSelected();
+  const t=lastTrips.find(x=>x.id===tid),seg=MetroTracking.segment(t,MetroMap.good);
+  if(!seg){M.notice('Faltan dos puntos válidos para el recorrido. Espera GPS reciente del taxista o marca recogida y destino.',true);return;}
+  if(byRoad){roadView=true;await map.streetRoute(seg.start,seg.end);el('tracking-info').textContent='Ruta vial calculada una sola vez mediante proveedor externo de pruebas; no es seguimiento GPS continuo.';}
+  else {roadView=false;await map.route(seg.start,seg.end,{fit:true});}
  }
  el('trips').addEventListener('click',async e=>{
   if(e.target.closest('[data-retry]'))return load();const a=e.target.closest('[data-map]'),c=e.target.closest('[data-cancel]');

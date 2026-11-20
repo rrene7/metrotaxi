@@ -28,7 +28,7 @@ window.MetroMap = (() => {
   const POINTS = {Pacora:[9.0825,-79.2896], '24 de Diciembre':[9.1017,-79.3603]}; // viewport ONLY, not actual station positions
   function make(config) {
     const root=document.getElementById(config.id), status=document.getElementById(config.id+'-status');
-    let map,layer,road,points=[],pickMode=null,tilesReady=false,loaded=false,cb=config.onChoose||(()=>{});
+    let map,layer,road,roadMode=null,points=[],pickMode=null,tilesReady=false,loaded=false,cb=config.onChoose||(()=>{});
     const info=(str,error=false)=>{if(status){status.textContent=str;status.classList.toggle('map-error',error)}};
     if(!root) return {ready:Promise.resolve(false), update:()=>{}, pick:()=>{}, route:async()=>{}, clearRoute:()=>{}};
     const ready=loadLibrary().then(L=>{
@@ -61,14 +61,16 @@ window.MetroMap = (() => {
       if(autoZoom&&bounds.length) map.fitBounds(window.L.latLngBounds(bounds).pad(.23),{maxZoom:16});
       if(points.length && !road)info(`Puntos GPS visibles: ${points.length}. No se muestran ubicaciones simuladas ni vencidas.`);
     }
-    function clearRoute(){if(road && loaded){map.removeLayer(road);road=null;}}
+    function clearRoute(){if(road && loaded){map.removeLayer(road);road=null;}roadMode=null;}
     function pick(which){pickMode=which;if(loaded)root.style.cursor='crosshair';info(`Pulsa el mapa para marcar ${which==='pickup'?'recogida':'destino'}. No se calculará dirección textual automáticamente.`);}
-    async function route(a,b){
+    async function route(a,b,options={}){
       if(!good(a?.lat,a?.lng)||!good(b?.lat,b?.lng)){info('No hay dos ubicaciones GPS válidas para calcular el recorrido.',true);return;}
       await ready;if(!loaded)return;
-      if(road){map.removeLayer(road);road=null;}
-      road=window.L.polyline([[a.lat,a.lng],[b.lat,b.lng]],{color:'#1d6fc4',dashArray:'8 8',weight:4}).addTo(map);
-      map.fitBounds(road.getBounds().pad(.18),{maxZoom:16});
+      const coords=[[a.lat,a.lng],[b.lat,b.lng]];
+      if(road && roadMode==='direct' && typeof road.setLatLngs==='function')road.setLatLngs(coords);
+      else {clearRoute();road=window.L.polyline(coords,{color:'#1d6fc4',dashArray:'8 8',weight:4}).addTo(map);}
+      roadMode='direct';
+      if(options.fit!==false)map.fitBounds(road.getBounds().pad(.18),{maxZoom:16});
       info('Trazo punteado = línea recta, NO recorrido por calles. Puedes solicitar una ruta real de prueba.');
       return {a,b};
     }
@@ -86,7 +88,7 @@ window.MetroMap = (() => {
         const data=await r.json();const one=data.routes?.[0],loc=one?.geometry?.coordinates;
         if(!Array.isArray(loc)||loc.length<2)throw Error('No existe una ruta vial para los puntos elegidos');
         if(road){map.removeLayer(road);road=null;}
-        road=window.L.polyline(loc.map(([lng,lat])=>[lat,lng]),{color:'#1463a8',weight:5,opacity:.85}).addTo(map);
+        road=window.L.polyline(loc.map(([lng,lat])=>[lat,lng]),{color:'#1463a8',weight:5,opacity:.85}).addTo(map);roadMode='street';
         map.fitBounds(road.getBounds().pad(.15),{maxZoom:16});
         info(`Ruta vial de PRUEBA: ${(one.distance/1000).toFixed(1)} km · aprox. ${Math.round(one.duration/60)} min; no garantiza el tiempo real de llegada.`);
       }catch(e){await route(a,b);info('Falló la ruta por calles ('+e.message+'). Solo se muestra la línea recta; usa Waze para navegar.',true)}finally{clearTimeout(timer)}
