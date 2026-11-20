@@ -41,3 +41,8 @@ Netlify aloja las interfaces; el backend y PostgreSQL necesitan un servicio HTTP
 Revisa `docs/PLAN_SALIDA_A_PRODUCCION.md` y `docs/PLAN_PUBLICACION_V10.md`.
 
 **Principio funcional:** Metro Taxi controla todas las solicitudes; el conductor solo ve sus carreras y el pasajero solo sus servicios. No publicar la flota completa ni teléfonos privados de clientes.
+
+
+## Piloto online restringido (Railway + PostgreSQL)
+
+El código incluye `Dockerfile`, `railway.toml` y `cloud/pilot.py` para ejecutar web + API en **un mismo origen HTTPS**, con PostgreSQL privado y **contraseña de acceso previa**. Se añaden herramientas de inicialización de una base completamente vacía y cuentas de personal creadas de forma interactiva. **No implica que esté desplegado.** Lee `docs/PILOTO_RAILWAY.md` antes de habilitar una URL pública. No migrar datos del prototipo ni usar contraseñas de ejemplo. El despliegue comercial sigue bloqueado por antiabuso, verificación de teléfono, proveedor de mapas, copias/restauración y pruebas móviles.

@@ -57,3 +57,12 @@
 ## GPS-105 — destino y polilínea desactualizados (20-11-2026)
 
 Se observó que la línea podía quedar estática tras una actualización GPS y, en el conductor, la fase en progreso dibujaba recogida → destino aunque hubiera GPS real. Se corrige refrescando el segmento desde la posición autorizada al punto correspondiente al estado, sin recentrar la vista. Si no existe GPS reciente, el trayecto es solo referencial (sin marcador inventado). Prueba `tests_cloud/test_tracking_segment.cjs`.
+
+
+## PILOT-106 — Controles contra publicación insegura (20-11-2026)
+
+- Riesgo: desplegar `cloud.preview` por error o publicar SQLite y claves de demostración. Control: Docker ejecuta exclusivamente `cloud.pilot:app`, Dockerfile sin root, .dockerignore sin datos/secretos y URL PostgreSQL obligatoria.
+- Riesgo: registrar usuarios sin control en una URL pública. Control provisional: clave adicional de acceso HTTP Basic para un grupo pequeño de pruebas, `METRO_PILOT_PASSWORD` de 20+ caracteres, requerimiento de HTTPS y configuración explícita de orígenes/hosts. No sirve como endurecimiento final.
+- Riesgo: alterar una base activa durante desplegado. Control: bootstrap exclusivo de base completamente vacía, bandera explícita, negativa ante tablas faltantes.
+- Riesgo: mapa en blanco en dominio remoto. Control: servir `/map-config.js` desde API con proveedor raster HTTPS configurable. OSM para prueba limitada solamente con elección explícita.
+- Pruebas: `tests_cloud/test_railway_pilot.py`, `tests_cloud/test_manage_pilot.py` y `tests_cloud/test_postgres_pilot.py` en PostgreSQL efímero de GitHub Actions.

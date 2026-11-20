@@ -134,3 +134,17 @@ En Linux/macOS o CI, ejecutar **ambos** comandos: `python scripts/validar_entreg
 - Conductor: el trazado durante carrera activa apunta a destino desde GPS actual cuando está disponible.
 - Prueba nueva `tests_cloud/test_tracking_segment.cjs`, ejecutada por `scripts/validar_cloud.py`.
 - Pendientes: prueba en dos teléfonos, rutas por calles con proveedor de producción, PostgreSQL/HTTPS y monitoreo GPS; este cambio NO despliega backend público.
+
+
+## PILOT-106 — Despliegue restringido, preparación 20-11-2026
+
+- Infraestructura versionada: Dockerfile Python 3.12 sin root, `railway.toml`, app `cloud.pilot` que sirve la web junto a API HTTPS, conexión PostgreSQL privada, sin Netlify obligatorio.
+- Seguridad extra: acceso previo HTTP Basic con clave aleatoria administrada por dueño, host/origen HTTPS explícitos, nunca SQLite ni credenciales de prueba. No sustituye seguridad de producción.
+- Inicialización de esquema exclusivamente en BD vacía y por opción explícita. No hay migración automática de instalaciones anteriores.
+- Manejo CLI interactivo para crear administrador, operador y conductor sin contraseñas en archivos.
+- Mapas vía `/map-config.js` con plantilla raster HTTPS del proveedor; OSM público solo por habilitación explícita durante piloto mínimo.
+- Pruebas: `tests_cloud/test_railway_pilot.py`, `test_manage_pilot.py`, `test_postgres_pilot.py` (PostgreSQL real efímero de CI); **no incluye prueba en proveedor Railway real**.
+- Para habilitar el piloto hacen falta credenciales/acciones del usuario en Railway, dominio generado y variables secretas. Mantener la demostración pública ficticia de GitHub Pages separada.
+- Pendiente producción: OTP, freno antiabuso, auditoría, política de datos, migraciones, mapas/rutas de pago y GPS Android físico.
+
+- Railway healthcheck: permitir exclusivamente el host técnico `healthcheck.railway.app` además del dominio real; el guardia de configuración impide omitirlo dentro de Railway.

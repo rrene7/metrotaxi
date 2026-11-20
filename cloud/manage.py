@@ -1,38 +1,64 @@
-"""Explicit PostgreSQL database initialization and staff bootstrap.
-Do not run against the v0.9 demo data, and never pass passwords via CLI args.
-"""
+"""Interactive setup for a fresh PostgreSQL pilot, never accept passwords in argv."""
 import argparse
 import getpass
 import os
-import sys
 from sqlalchemy import create_engine, insert, select
 from .app import password_hash
-from .schema import metadata, staff
+from .pilot_tools import normalize_postgres_url
+from .schema import metadata, staff, drivers
+
+STATIONS=('Pacora', '24 de Diciembre')
+
+
+def create_staff(engine, user, pwd, *, role='admin', driver=None):
+    user=user.strip()
+    if not user or len(user)>64 or role not in ('admin','operator','driver') or len(pwd)<14:
+        raise ValueError('Usuario, contraseña o rol inválidos (contraseña mín. 14)')
+    if role=='driver' and not driver:
+        raise ValueError('Falta el expediente del conductor')
+    with engine.begin() as c:
+        if c.execute(select(staff.c.id).where(staff.c.username==user)).first():
+            raise ValueError('El usuario ya existe')
+        driver_id=None
+        if driver:
+            unit,name,station=driver
+            if not unit or len(unit)>32 or not name or len(name)>120 or station not in STATIONS:
+                raise ValueError('Unidad, nombre o sede inválidos')
+            if c.execute(select(drivers.c.id).where(drivers.c.unit==unit)).first():
+                raise ValueError('Esa unidad ya existe')
+            driver_id=c.execute(insert(drivers).values(unit=unit,name=name,station=station)).inserted_primary_key[0]
+        c.execute(insert(staff).values(username=user,role=role,driver_id=driver_id,password_hash=password_hash(pwd)))
 
 
 def main():
-    parser=argparse.ArgumentParser()
-    parser.add_argument('--init-schema', action='store_true', help='Crear estructura vacía (nueva BD PostgreSQL)')
-    parser.add_argument('--create-admin', action='store_true', help='Crear administrador inicial desde consola privada')
-    options=parser.parse_args()
-    if options.init_schema == options.create_admin:
-        parser.error('Usa una opción: --init-schema o --create-admin')
-    url=os.environ.get('DATABASE_URL','')
-    if not url.startswith('postgresql+psycopg://'):
-        raise SystemExit('Se requiere DATABASE_URL PostgreSQL; SQLite NO permitido aquí')
-    engine=create_engine(url,pool_pre_ping=True)
-    if options.init_schema:
-        metadata.create_all(engine)
-        print('Esquema PostgreSQL creado; aún no hay datos. No importa SQLite automáticamente.')
-    else:
-        user=input('Usuario administrador: ').strip()
-        if not user or len(user)>64:raise SystemExit('Usuario inválido')
-        pwd=getpass.getpass('Contraseña fuerte (mín. 14 caracteres): ')
-        if len(pwd)<14:raise SystemExit('Contraseña demasiado corta')
-        with engine.begin() as c:
-            if c.execute(select(staff.c.id).where(staff.c.username==user)).first():
-                raise SystemExit('El usuario ya existe')
-            c.execute(insert(staff).values(username=user,role='admin',driver_id=None,password_hash=password_hash(pwd)))
-        print('Administrador inicial creado. Ninguna contraseña se escribió en el repositorio.')
+    p=argparse.ArgumentParser()
+    group=p.add_mutually_exclusive_group(required=True)
+    group.add_argument('--init-schema',action='store_true',help='Crear tablas solo en una BD nueva')
+    group.add_argument('--create-admin',action='store_true')
+    group.add_argument('--create-operator',action='store_true')
+    group.add_argument('--create-driver',action='store_true')
+    opts=p.parse_args()
+    dburl=normalize_postgres_url(os.environ.get('DATABASE_URL',''))
+    engine=create_engine(dburl,pool_pre_ping=True)
+    try:
+        if opts.init_schema:
+            metadata.create_all(engine)
+            print('Estructura inicial creada. No se importa SQLite.')
+            return
+        role='driver' if opts.create_driver else 'operator' if opts.create_operator else 'admin'
+        driver=None
+        if role=='driver':
+            unit=input('Unidad (ej. MT-01): ').strip()
+            name=input('Nombre del conductor: ').strip()
+            station=input('Sede (Pacora o 24 de Diciembre): ').strip()
+            driver=(unit,name,station)
+        username=input('Usuario para iniciar sesión: ').strip()
+        pwd=getpass.getpass('Contraseña fuerte (mínimo 14 caracteres): ')
+        create_staff(engine,username,pwd,role=role,driver=driver)
+        print('Cuenta creada. No se guardó la contraseña en archivos.')
+    except ValueError as exc:
+        raise SystemExit(str(exc)) from None
+    finally:
+        engine.dispose()
 
 if __name__=='__main__':main()
