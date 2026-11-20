@@ -126,3 +126,11 @@ En Linux/macOS o CI, ejecutar **ambos** comandos: `python scripts/validar_entreg
 - En la web staging el refresco GPS no borra el recorrido; se limpia al cambiar de carrera y al perder puntos válidos.
 - Prueba añadida: `tests_cloud/test_map_route_persistence.cjs`, invocada automáticamente por `scripts/validar_cloud.py`.
 - Pendiente: prueba real Android y navegador, proveedor de mapas/rutas para producción, PostgreSQL y Netlify HTTPS. No se ha distribuido un APK de uso comercial.
+
+## GPS-105 — seguimiento de carrera en web staging (20-11-2026)
+- Pasajero: la polilínea se actualiza cada vez que recibe GPS reciente del conductor confirmado; recogida antes de iniciar y destino durante la carrera.
+- Las actualizaciones no recentran el mapa; vista de ruta por calles solo bajo petición explícita y no se recalcula en cada consulta.
+- Sin GPS reciente, solo se muestra trayecto de referencia recogida–destino, identificado como tal; nunca se finge posición del taxi.
+- Conductor: el trazado durante carrera activa apunta a destino desde GPS actual cuando está disponible.
+- Prueba nueva `tests_cloud/test_tracking_segment.cjs`, ejecutada por `scripts/validar_cloud.py`.
+- Pendientes: prueba en dos teléfonos, rutas por calles con proveedor de producción, PostgreSQL/HTTPS y monitoreo GPS; este cambio NO despliega backend público.

@@ -53,3 +53,7 @@
 - **ANDROID-BUILD-103:** GitHub Actions falló en `:app:compileDebugJavaWithJavac`; `android.webkit.WebViewTransport` no es una clase de nivel superior. Se usa `WebView.WebViewTransport` y un guardia en `tests/test_android_source_v09.py`. Es obligatorio verificar el resultado real de Gradle en CI antes de afirmar que existe APK funcional.
 - **MAP-104:** `MetroMap.update()` eliminaba la polilínea cada vez que se actualizaban los taxis o las carreras. Ahora actualiza marcadores sin borrar la ruta; `clearRoute()` la limpia al cambiar de carrera o faltar puntos válidos. Prueba `tests_cloud/test_map_route_persistence.cjs`, incluida en `scripts/validar_cloud.py`.
 - **Pendientes:** comprobar mapas y GPS en Chrome/Android físico. El trazado en línea recta y el proveedor vial de pruebas no equivalen a ruta de producción ni garantizan tiempo de llegada.
+
+## GPS-105 — destino y polilínea desactualizados (20-11-2026)
+
+Se observó que la línea podía quedar estática tras una actualización GPS y, en el conductor, la fase en progreso dibujaba recogida → destino aunque hubiera GPS real. Se corrige refrescando el segmento desde la posición autorizada al punto correspondiente al estado, sin recentrar la vista. Si no existe GPS reciente, el trayecto es solo referencial (sin marcador inventado). Prueba `tests_cloud/test_tracking_segment.cjs`.
