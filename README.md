@@ -57,3 +57,7 @@ py -3.12 -m scripts.verificar_piloto_https --url https://TU-DOMINIO-REAL.up.rail
 ```
 
 También está disponible el workflow manual `Actions → Metro Taxi - Comprobar piloto HTTPS`. Introduce solo la URL; comprueba conexión a la base y las barreras privadas, sin iniciar sesión ni alterar carreras. Si no existe un dominio Railway **real**, esta comprobación no puede ejecutarse. Para activar la nube, autoriza la conexión de Railway a tu GitHub; la integración ChatGPT Railway debe conectarse de forma independiente si quieres operarla directamente desde aquí.
+
+## Netlify: flujo automático igual que HidroLav507
+
+`netlify.toml` publica **solo** la simulación `netlify-public/` tras pasar su prueba de JavaScript. Para enlazar un proyecto nuevo Netlify a `main`, consulta `docs/NETLIFY_COMO_HIDROLAV507.md`. No sustituye a la API FastAPI y PostgreSQL: las carreras reales todavía no están disponibles públicamente.

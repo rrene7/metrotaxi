@@ -183,3 +183,13 @@ En Linux/macOS o CI, ejecutar **ambos** comandos: `python scripts/validar_entreg
 - Regresión `tests_cloud/test_render_blueprint.py` garantiza que el Blueprint conserve `plan: free` y no incluya secretos o bases de pago.
 - **Acceso externo:** la integración Render todavía figura sin conexión activa cuando se consulta desde ChatGPT; no hay dominio Render, base Aiven ni web Netlify verificados. Nunca afirmar que se desplegó por subir el YAML a GitHub.
 - Limitación funcional importante: los planes gratuitos pueden suspenderse; además Render Free puede no ofrecer terminal interactiva para crear la primera cuenta de administrador. No introducir cuentas semilla públicas o credenciales estáticas por solucionar ese problema.
+
+
+## NETLIFY-111 — Publicar Metro Taxi como HidroLav507 (20-11-2026)
+
+- Flujo replicado: GitHub `rrene7/metrotaxi` → validaciones automatizadas → fusión a `main` → publicación continua en Netlify. No modificar la web existente `hidrolav507.netlify.app`.
+- `netlify.toml` aloja **solo** `netlify-public/` con la simulación pública, y ejecuta `tests_cloud/test_netlify_public_demo.cjs` antes de publicar. No se publica `cloud/`, `runtime/`, `.env` ni información de usuarios.
+- La carpeta contiene una copia revisada del demo `gh-pages`. Actualizar ambas fuentes de demostración de forma coordinada mediante PR; la prueba comprueba el hash del script para evitar JavaScript caché e interfaz incompatible.
+- `tests_cloud/test_netlify_static_publish.py` revisa rutas, headers de no-indexación y ausencia de backend o claves en el directorio público.
+- No existe aún URL Netlify verificada para Metro Taxi: el titular debe vincular **un proyecto nuevo** a `rrene7/metrotaxi`, rama `main`. No alterar `hidrolav507`.
+- Esto permite probar diseño y flujos ficticios; **no** entrega despacho multiusuario. API HTTPS, PostgreSQL persistente, dispositivos reales y autorización siguen pendientes.
