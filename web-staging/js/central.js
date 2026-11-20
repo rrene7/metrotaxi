@@ -83,6 +83,11 @@ ${['pending','offered','accepted','inprogress'].includes(t.status)?`<button clas
      el('point-method').textContent='Coordenadas escritas manualmente; confirma con el pasajero antes de guardar.';
      map.update(pointsWithPreview());}
  });
+ el('point-pick-again').addEventListener('click',()=>{
+   if(!pointEdit)return;
+   map.pick(pointEdit.point);
+   el('map-central').scrollIntoView?.({behavior:'smooth',block:'center'});
+ });
  el('point-cancel').addEventListener('click',closePointEditor);
  el('point-form').addEventListener('submit',async e=>{
    e.preventDefault();

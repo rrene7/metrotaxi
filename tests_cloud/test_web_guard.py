@@ -32,7 +32,7 @@ class CloudWebChecks(unittest.TestCase):
         central=(WEB/'central.html').read_text()
         script=(WEB/'js/central.js').read_text()
         mapa=(WEB/'js/mapa.js').read_text()
-        for marker in ('id="point-editor"','id="point-form"','id="point-confirm"','id="point-lat"','id="point-lng"'):
+        for marker in ('id="point-editor"','id="point-form"','id="point-confirm"','id="point-lat"','id="point-lng"','id="point-pick-again"'):
             self.assertIn(marker,central)
         self.assertIn("M.api('/api/trips/point','POST'",script)
         self.assertIn('confirmed_with_passenger:true',script)
