@@ -19,7 +19,7 @@
    | Variable | Valor |
    |---|---|
    | `DATABASE_URL` | Referencia a la base privada: `${{Postgres.DATABASE_URL}}` (ajusta `Postgres` al nombre del servicio DB) |
-   | `METRO_ALLOWED_HOSTS` | `mi-piloto.up.railway.app` |
+   | `METRO_ALLOWED_HOSTS` | `mi-piloto.up.railway.app,healthcheck.railway.app` |
    | `METRO_ALLOWED_ORIGINS` | `https://mi-piloto.up.railway.app` |
    | `METRO_PILOT_USER` | `metrotaxi` o un usuario distinto |
    | `METRO_PILOT_PASSWORD` | **Clave aleatoria única de 20+ caracteres** creada por ti |
