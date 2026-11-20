@@ -18,7 +18,7 @@
     t.status==='inprogress'?{lat:t.dest_lat,lng:t.dest_lng}:null;
   const start=loc&&MetroMap.good(loc.lat,loc.lng)?{lat:loc.lat,lng:loc.lng}:null;
   const a=start||(t.status==='inprogress'&&MetroMap.good(t.pickup_lat,t.pickup_lng)?{lat:t.pickup_lat,lng:t.pickup_lng}:null);
-  if(a&&next&&MetroMap.good(next.lat,next.lng))map.route(a,next,{fit:changed});else map.clearRoute();else map.clearRoute();
+  if(a&&next&&MetroMap.good(next.lat,next.lng))map.route(a,next,{fit:changed});else map.clearRoute();
  }
  async function load(){if(busy)return;busy=true;
   try{const data=await M.api('/api/mine'),d=data.driver;currentDriver=d;allTrips=data.trips;
