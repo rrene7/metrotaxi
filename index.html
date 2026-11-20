@@ -24,8 +24,8 @@ main{max-width:1180px;margin:22px auto 50px;padding:0 18px}h1{font-size:clamp(24
 .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;background:#1b9b6b}.dot.yellow{background:#eca923}.dot.blue{background:#316bc3}
 .timeline{padding:0;list-style:none;display:grid;gap:9px;margin:14px 0}.timeline li{border-left:3px solid #f1bf37;padding:7px 12px;background:#f7f9fc;border-radius:5px;color:#3b4d64}
 .info{background:#e8f5ed;padding:13px;border-radius:10px;margin:14px 0;color:#155737}.muted{color:#687687;font-size:13px}
-.driver{display:flex;gap:15px;align-items:center;border-radius:12px;padding:14px;background:#eff4f9}.avatar{width:65px;height:65px;border-radius:50%;background:#cbd8e7;display:grid;place-items:center;font-size:27px}.driver small{color:#697d90}
-footer{color:#75849a;text-align:center;margin-top:25px;font-size:12px}
+[hidden]{display:none!important}.driver{display:flex;gap:15px;align-items:center;border-radius:12px;padding:14px;background:#eff4f9}.avatar{width:65px;height:65px;border-radius:50%;background:#cbd8e7;display:grid;place-items:center;font-size:27px}.driver small{color:#697d90}
+#passenger-nav{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}#passenger-nav button{padding:8px 12px;background:white;border:1px solid #cbd7e3;border-radius:9px;color:#193c5e;font-weight:700}#passenger-nav button[aria-selected=true]{background:#132f53;color:white}.history-item{padding:10px;border:1px solid #dbe4ef;border-radius:9px;margin:8px 0}.taxi-icon{font-size:25px;line-height:30px;text-align:center;filter:drop-shadow(0 2px 2px #3337)}footer{color:#75849a;text-align:center;margin-top:25px;font-size:12px}
 @media(max-width:780px){.layout{grid-template-columns:1fr}#map{height:340px}header{padding:14px 18px}}
 </style></head><body>
 <header><div class="logo"><span>MT</span> METRO TAXI</div><span class="tag">SIMULACIÓN PÚBLICA · SIN DATOS REALES</span></header>
@@ -37,15 +37,17 @@ footer{color:#75849a;text-align:center;margin-top:25px;font-size:12px}
 <button type="button" data-role="conductor" aria-selected="false">🚕 Conductor</button></div>
 <div class="layout">
 <section class="card"><h2 id="role-title">Solicitud del pasajero</h2><p id="role-info">Solicita un taxi desde un punto marcado. La central recibirá la carrera.</p>
-<div class="stats"><div class="stat"><strong id="requests">0</strong><small>Solicitudes</small></div><div class="stat"><strong id="available">2</strong><small>Disponibles</small></div><div class="stat"><strong id="active">0</strong><small>En servicio</small></div></div>
-<div class="info" id="trip-status" role="status">No hay carreras activas.</div>
+<div class="stats" id="demo-stats"><div class="stat"><strong id="requests">0</strong><small>Solicitudes</small></div><div class="stat"><strong id="available">2</strong><small>Disponibles</small></div><div class="stat"><strong id="active">0</strong><small>En servicio</small></div></div>
+<div id="passenger-nav" hidden><button type="button" data-pass-tab="active" aria-selected="true">Carrera activa</button><button type="button" data-pass-tab="history" aria-selected="false">Historial</button></div>
+<div id="passenger-history" hidden><h2>Mis carreras anteriores</h2><div id="history-list">Aún no tienes carreras terminadas.</div></div>
+<div id="passenger-body"><div class="info" id="trip-status" role="status">No hay carreras activas.</div>
 <div id="driver-card" class="driver" hidden><div class="avatar" aria-label="Foto ficticia">🚕</div><div><strong>Conductor de prueba</strong><div>Unidad MT-01 · Placa DEMO-01</div><small>Perfil ilustrativo, no conductor real</small></div></div>
-<div class="actions" id="actions"></div>
-<h2>Registro de operaciones</h2><ol class="timeline" id="timeline"><li>Selecciona «Solicitar taxi» para empezar la simulación.</li></ol>
-<p class="muted">En la plataforma real, Metro Taxi asigna la carrera; el pasajero solo verá el taxista confirmado y su propia solicitud.</p></section>
+<div class="actions" id="actions"></div></div>
+<div id="operations-panel"><h2>Registro interno de operaciones (central / conductor)</h2><ol class="timeline" id="timeline"><li>Selecciona «Solicitar taxi» para empezar la simulación.</li></ol>
+<p class="muted">El historial interno corresponde exclusivamente a la central y al conductor.</p></div></section>
 <section class="card"><h2>🗺️ Pacora y 24 de Diciembre</h2><p id="map-note">Marcadores y trayectoria ficticios; la línea punteada NO es una ruta por calles.</p>
 <div id="map" aria-label="Mapa de demostración"></div><p id="tile-status" class="muted" role="status">Preparando mapa…</p>
-<div class="key"><span><i class="dot"></i>Taxi disponible</span><span><i class="dot yellow"></i>Taxi asignado</span><span><i class="dot blue"></i>Recogida / destino</span></div>
+<div class="key"><span>🚕 Taxi en el mapa</span><span><i class="dot yellow"></i>Taxi asignado</span><span><i class="dot blue"></i>Recogida / destino</span></div>
 </section></div><footer>METRO TAXI · Demo pública para revisión de diseño y flujo. Código de desarrollo: github.com/rrene7/metrotaxi</footer></main>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="./demo.js"></script></body></html>

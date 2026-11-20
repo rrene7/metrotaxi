@@ -1,5 +1,5 @@
-# Metro Taxi — Demo pública
+# Metro Taxi — Demostración pública con datos ficticios
 
-Es una simulación con datos inventados: no solicita taxis reales, no identifica conductores reales y no envía datos a un servidor. Su propósito es revisar visualmente el flujo pasajero → central → conductor.
+Pasajero solo ve estado y su historial en una pestaña separada. La bitácora interna solo se muestra al seleccionar rol central o conductor (es una demo, no un sistema de permisos). El taxi simulado aparece como 🚕. El conductor no puede iniciar ni completar hasta que el vehículo simulado llegue a recogida o destino.
 
-Para publicar con GitHub Pages: Settings → Pages → Deploy from a branch → gh-pages / (root) → Save. Para Netlify Drop: descarga este branch como ZIP y suelta la carpeta descomprimida en https://app.netlify.com/drop.
+Esta demo **NO envía coordenadas GPS ni solicitudes reales**. No contiene clientes ni contraseñas reales.
