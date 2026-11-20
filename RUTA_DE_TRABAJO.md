@@ -146,3 +146,5 @@ En Linux/macOS o CI, ejecutar **ambos** comandos: `python scripts/validar_entreg
 - Pruebas: `tests_cloud/test_railway_pilot.py`, `test_manage_pilot.py`, `test_postgres_pilot.py` (PostgreSQL real efímero de CI); **no incluye prueba en proveedor Railway real**.
 - Para habilitar el piloto hacen falta credenciales/acciones del usuario en Railway, dominio generado y variables secretas. Mantener la demostración pública ficticia de GitHub Pages separada.
 - Pendiente producción: OTP, freno antiabuso, auditoría, política de datos, migraciones, mapas/rutas de pago y GPS Android físico.
+
+- Railway healthcheck: permitir exclusivamente el host técnico `healthcheck.railway.app` además del dominio real; el guardia de configuración impide omitirlo dentro de Railway.
