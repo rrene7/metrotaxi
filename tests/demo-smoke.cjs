@@ -3,9 +3,15 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const vm=require('node:vm');
 const path=require('node:path');
+const crypto=require('node:crypto');
 const root=path.join(__dirname,'..');
 const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
 const code=fs.readFileSync(path.join(root,'demo.js'),'utf8');
+const gitBlob=crypto.createHash('sha1').update('blob '+Buffer.byteLength(code)+'\0').update(code).digest('hex').slice(0,12);
+assert.ok(html.includes('./demo.js?v='+gitBlob),'HTML must refer to exact JS blob revision to prevent browser cache regressions');
+assert.match(html,/id="passenger-nav"/,'Passenger tabs should exist by default');
+assert.doesNotMatch(html,/id="passenger-nav" hidden/,'Passenger navigation must not be hidden when JS fails');
+assert.match(html,/id="demo-init-error" hidden/,'Provide a fallback when the demo script fails');
 for(const id of ['passenger-nav','passenger-body','passenger-history','operations-panel','demo-stats','actions','history-list']){
  assert.match(html,new RegExp('id="'+id+'"'),'Page must provide '+id);
 }
