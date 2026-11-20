@@ -39,6 +39,8 @@ def check_pilot_config(env):
     permitted_hosts = [x.strip() for x in hosts.split(',') if x.strip()]
     if not permitted_origins or not permitted_hosts:
         raise RuntimeError('Configura METRO_ALLOWED_ORIGINS y METRO_ALLOWED_HOSTS')
+    if env.get('RAILWAY_PROJECT_ID') and 'healthcheck.railway.app' not in permitted_hosts:
+        raise RuntimeError('Railway requiere healthcheck.railway.app en METRO_ALLOWED_HOSTS')
     for entry in permitted_origins:
         parsed = urlparse(entry)
         if (parsed.scheme != 'https' or not parsed.hostname or parsed.username or parsed.password
