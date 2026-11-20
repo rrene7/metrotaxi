@@ -51,3 +51,25 @@
 ## Barreras pendientes antes de producción
 
 Ver `docs/PLAN_SALIDA_A_PRODUCCION.md`: limitar fuerza bruta/registro, verificar teléfonos, asegurar acceso y retención, migraciones, respaldo-restauración, proveedor profesional de mapas, notificaciones/colas, 200–300 carreras/día y pruebas Android en carretera. No anunciar que esta configuración sea producción.
+
+
+## Activación y verificación del piloto — DEPLOY-109 (noviembre de 2026)
+
+**Este repositorio no crea ni cobra recursos de Railway por sí solo.** El titular debe autorizar la conexión a GitHub, elegir o crear el proyecto y confirmar las condiciones de Railway. No pegues contraseñas, variables privadas, enlaces de administración ni tokens en chats, commits ni capturas.
+
+1. Abre https://railway.com/new y crea un proyecto vacío llamado **Metro Taxi Piloto**. Usa `+ New → Database → PostgreSQL`; la base debe permanecer en **red privada**, sin acceso TCP público.
+2. Agrega otro servicio con **GitHub Repo → rrene7/metrotaxi → main**, desde la raíz del repositorio, usando el `Dockerfile` y `railway.toml` existentes. Obtén el hostname bajo **Settings → Networking → Generate Domain**. En el servicio web, configura `DATABASE_URL` con la referencia privada que proporciona Railway a PostgreSQL.
+3. Agrega las variables privadas indicadas en la tabla anterior, usando **tu hostname real** en `METRO_ALLOWED_ORIGINS` y `METRO_ALLOWED_HOSTS`, además de `healthcheck.railway.app`. No escribas `https://` en la variable de hosts; sí en la de orígenes. La contraseña de acceso al piloto debe ser única, aleatoria y de más de 20 caracteres.
+4. Activa `METRO_BOOTSTRAP_EMPTY_DB=1` **solo para el primer inicio sobre PostgreSQL realmente vacío**. Verifica `/api/health` y entonces establece `METRO_BOOTSTRAP_EMPTY_DB=0`. Si la base no está vacía, no fuerces el arranque ni borres tablas; inspecciona la estructura.
+5. En la consola SSH del **servicio web** (no la consola de PostgreSQL), crea administrador, operador y conductor con `railway ssh -- python -m cloud.manage --create-admin` y opciones correspondientes. El comando solicita la contraseña de forma interactiva; no la incluyas en argumentos o variables de GitHub.
+6. Ejecuta la verificación externa **sin introducir credenciales** desde tu PC, en la raíz del repositorio:
+
+```powershell
+py -3.12 -m scripts.verificar_piloto_https --url https://DOMINIO-REAL.up.railway.app
+```
+
+También puedes abrir GitHub → **Actions → Metro Taxi - Comprobar piloto HTTPS → Run workflow** e introducir solamente la URL HTTPS pública (no la contraseña). El verificador exige que `/api/health` reporte PostgreSQL disponible y que las rutas privadas respondan 401 + HTTP Basic cuando se consultan **sin** contraseña. **No realiza POST ni registra carreras.**
+
+La comprobación HTTPS no sustituye las pruebas autenticadas de sesión/CSRF, geocerca, mapas, cobros, recuperación, derechos de datos, dispositivos reales y disponibilidad del proveedor. El piloto solo se habilita para cuentas ficticias y un grupo limitado de pruebas; **aún no hay autorización para pasajeros reales**.
+
+**Si usas ChatGPT con la integración Railway**, primero conéctala desde tu cuenta: el repositorio en GitHub no concede por sí mismo acceso a Railway.

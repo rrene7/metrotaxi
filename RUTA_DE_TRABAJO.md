@@ -164,3 +164,13 @@ En Linux/macOS o CI, ejecutar **ambos** comandos: `python scripts/validar_entreg
 - La actualización llega al pasajero y conductor mediante el sondeo existente (sin notificación push). Un punto validado por central NO es GPS del conductor; el conductor sigue necesitando posición de dispositivo precisa y reciente para las acciones de llegada.
 - Pruebas agregadas: ciclo completo de carrera por llamada sin GPS, CSRF, autorización, auditoría, entradas inválidas, conflictos y cambios tras cierre. Revisar el workflow de GitHub antes de fusionar.
 - Pendiente: ensayo visual local y en teléfono, política de cambios informados al pasajero cuando se actualizan puntos, HTTPS PostgreSQL real, validación de GPS frente a falsificación, proveedor cartográfico comercial.
+
+
+## DEPLOY-109 — Puerta de publicación segura en Railway (20-11-2026)
+
+- La cuenta Railway del titular no está conectada a ChatGPT: ningún dominio HTTPS operativo ni PostgreSQL alojado se ha creado o verificado mediante esta interacción. No llamar "publicado" a un piloto que solo tiene código en GitHub.
+- Se añade `cloud/pilot_probe.py` y `scripts/verificar_piloto_https.py`: comprobación **sin secretos** de certificado HTTPS, /api/health con PostgreSQL listo y acceso HTTP Basic a páginas/API privadas; no realiza mutaciones ni sigue redirecciones.
+- Workflow manual de Actions `Metro Taxi - Comprobar piloto HTTPS` recibe solo una URL, nunca credenciales. Probarlo **después** de activar dominio y la base desde Railway.
+- CLI `cloud.manage --init-schema` ahora se niega a operar sobre cualquier base con tablas, aunque esté parcialmente inicializada. Registrar migraciones futuras por separado con respaldo y revisión.
+- Tests automáticos `tests_cloud/test_pilot_deploy_readiness.py`; mantener validaciones de los flujos, roles, CSRF y PostgreSQL temporal.
+- Sigue pendiente: autorización del propietario para crear Railway, conectar repositorio, variables privadas/hostname, bootstrap, cuentas ficticias, pruebas reales en teléfonos y entorno con mapas/rutas autorizados.

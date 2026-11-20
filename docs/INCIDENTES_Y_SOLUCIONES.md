@@ -80,3 +80,12 @@ El pasajero ya no recibe ofertas ni datos del conductor antes de la aceptación;
 **Solución:** API `POST /api/trips/point` con rol admin/operador, CSRF, Origin, confirmación explícita con pasajero, validación numérica/finita, control por estado, actualización transaccional con comprobación de versión de coordenadas y auditoría. La central selecciona sobre mapa o introduce datos recibidos; se etiqueta como punto confirmado, no como GPS del conductor.
 
 **Regresión obligatoria:** probar con conductor sin GPS (409), cargar punto de recogida confirmado, iniciar solo cerca, registrar destino en curso, finalizar solo cerca, negar cambio de punto al cerrar, negar usuarios ajenos y coordenadas inválidas. Tests en `tests_cloud/test_cloud_flow.py`, guardias de la interfaz en `tests_cloud/test_web_guard.py`.
+
+
+## DB-109 — Inicialización administrativa sin protección ante tablas existentes (20-11-2026)
+
+**Riesgo:** el comando `python -m cloud.manage --init-schema` ejecutaba `metadata.create_all` directamente. En una base parcialmente configurada podía agregar tablas sin plan ni revisión y ocultar un fallo de migración.
+
+**Corrección:** `initialize_empty_schema()` comprueba primero que no exista ninguna tabla y reutiliza `ensure_schema` de la barrera de piloto. Ante cualquier tabla previa falla sin alterarla. La opción de primer arranque sigue destinada solo a bases nuevas; las migraciones de datos requieren un proceso independiente.
+
+**Prevención:** `tests_cloud/test_pilot_deploy_readiness.py` comprueba base vacía, base con tablas y que un segundo intento no modifica tablas. El mismo test vigila dominios HTTPS y rechazo de rutas públicas sin contraseña.

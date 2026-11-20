@@ -46,3 +46,14 @@ Revisa `docs/PLAN_SALIDA_A_PRODUCCION.md` y `docs/PLAN_PUBLICACION_V10.md`.
 ## Piloto online restringido (Railway + PostgreSQL)
 
 El código incluye `Dockerfile`, `railway.toml` y `cloud/pilot.py` para ejecutar web + API en **un mismo origen HTTPS**, con PostgreSQL privado y **contraseña de acceso previa**. Se añaden herramientas de inicialización de una base completamente vacía y cuentas de personal creadas de forma interactiva. **No implica que esté desplegado.** Lee `docs/PILOTO_RAILWAY.md` antes de habilitar una URL pública. No migrar datos del prototipo ni usar contraseñas de ejemplo. El despliegue comercial sigue bloqueado por antiabuso, verificación de teléfono, proveedor de mapas, copias/restauración y pruebas móviles.
+
+
+## Comprobar un dominio de Railway (solo después de activarlo)
+
+El despliegue restringido se configura en la cuenta del propietario siguiendo `docs/PILOTO_RAILWAY.md`. **GitHub Actions no crea recursos en Railway ni guarda contraseñas.** Una vez desplegados el servidor y PostgreSQL privados, comprueba la URL HTTPS desde la raíz del repositorio:
+
+```powershell
+py -3.12 -m scripts.verificar_piloto_https --url https://TU-DOMINIO-REAL.up.railway.app
+```
+
+También está disponible el workflow manual `Actions → Metro Taxi - Comprobar piloto HTTPS`. Introduce solo la URL; comprueba conexión a la base y las barreras privadas, sin iniciar sesión ni alterar carreras. Si no existe un dominio Railway **real**, esta comprobación no puede ejecutarse. Para activar la nube, autoriza la conexión de Railway a tu GitHub; la integración ChatGPT Railway debe conectarse de forma independiente si quieres operarla directamente desde aquí.
