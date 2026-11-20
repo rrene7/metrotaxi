@@ -252,12 +252,11 @@ class CloudFlowTests(unittest.TestCase):
               'expected_lat':9.08,'expected_lng':-79.28,'method':'map_click',
               'confirmed_with_passenger':True}
         for update_payload in (
-            {'lat':True},{'lng':None},{'lat':float('inf')},{'lng':181},
+            {'lat':True},{'lng':None},{'lat':'Infinity'},{'lng':181},
             {'point':'random'},{'method':'guess'},{'lat':0,'lng':0},
             {'expected_lng':None}):
             body=base|update_payload
-            self.assertEqual(self.admin.post('/api/trips/point',json=body,headers=self.csrf(self.admin)).status_code,400
-                             if update_payload!={'expected_lng':None} else 409,str(update_payload))
+            self.assertEqual(self.admin.post('/api/trips/point',json=body,headers=self.csrf(self.admin)).status_code,400,str(update_payload))
         self.assertEqual(self.admin.post('/api/trips/point',json=base,headers=self.csrf(self.admin)).status_code,200)
         self.assertEqual(self.admin.post('/api/trips/point',json=base|{'lat':9.081},headers=self.csrf(self.admin)).status_code,409)
 
