@@ -14,3 +14,10 @@ label{display:block;font-weight:700;font-size:13px;margin-bottom:5px}input,selec
 .map-tools{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:10px 0}
 .card-photo{width:88px;height:88px;object-fit:cover;border-radius:10px;background:#e5edf5}
 .tag{font-size:11px;color:#526475;padding:5px 8px;background:#edf2f7;border-radius:14px}
+
+/* Pasajero: una sola sección visible; sin bitácora de despacho. */
+.customer-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 18px}
+.customer-tabs .tab-selected{background:#10233d;color:#fff;border-color:#10233d}
+.customer-progress{padding:12px;background:#ecf5fe;border-radius:9px;color:#204264}
+.metro-taxi-icon{background:transparent;border:0;text-align:center}
+.metro-taxi-icon .taxi-glyph{font-size:26px;line-height:1;filter:drop-shadow(0 1px 3px #3456);text-shadow:0 1px 2px #fff}

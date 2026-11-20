@@ -3,6 +3,7 @@
  const map=MetroMap.make({id:'map-conductor'});
  try{const s=await M.me();if(!s.authenticated||s.user.role!=='driver'){location.replace('/ingresar.html');return;}}
  catch(e){M.notice(e.message,true);return;}
+ function canAct(t,act){return !['start','complete'].includes(act)||Boolean(t.arrival?.[act]?.allowed)}
  const actions={offered:[['accept','Aceptar'],['reject','Rechazar']],accepted:[['start','Iniciar carrera']],inprogress:[['complete','Finalizar carrera']]};
  function mapCurrent(){
   const t=allTrips.find(x=>x.id===selected);if(!t){map.clearRoute();lastMapSelection=null;return;}
@@ -26,7 +27,7 @@
     const pick=t.status==='accepted'?M.link(t.pickup_lat,t.pickup_lng):null;
     const dest=t.status==='inprogress'?M.link(t.dest_lat,t.dest_lng):null;
     const n=pick||dest,lbl=pick?'Recogida':'Destino';
-    return `<article class="item"><div class="row between"><b>#MT-${t.id}</b><span class="status">${M.status(t.status)}</span></div><p><b>Pasajero:</b> ${M.esc(t.name)} · <b>Recogida:</b> ${M.esc(t.pickup)}</p><p><b>Destino:</b> ${M.esc(t.destination||'Por confirmar')}</p><p>Referencia: ${M.esc(t.reference||'—')}</p>${n?`<div class="actions"><a target="_blank" rel="noopener noreferrer" href="${n.waze}">Waze a ${lbl}</a><a target="_blank" rel="noopener noreferrer" href="${n.maps}">Google Maps</a></div>`:['accepted','inprogress'].includes(t.status)?'<p class="muted">Sin coordenadas para Waze; confirma con la central.</p>':''}<div class="actions"><button class="button" data-view="${t.id}">Ver puntos y recorrido</button>${(actions[t.status]||[]).map(([a,label])=>`<button class="button ${a==='reject'?'':'primary'}" data-action="${a}" data-trip="${t.id}">${label}</button>`).join('')}</div></article>`;
+    return `<article class="item"><div class="row between"><b>#MT-${t.id}</b><span class="status">${M.status(t.status)}</span></div><p><b>Pasajero:</b> ${M.esc(t.name)} · <b>Recogida:</b> ${M.esc(t.pickup)}</p><p><b>Destino:</b> ${M.esc(t.destination||'Por confirmar')}</p><p>Referencia: ${M.esc(t.reference||'—')}</p>${(t.status==='accepted'||t.status==='inprogress')?`<p class="muted">${M.esc(t.arrival?.[t.status==='accepted'?'start':'complete']?.reason||'Se requiere GPS reciente para continuar')}</p>`:''}${n?`<div class="actions"><a target="_blank" rel="noopener noreferrer" href="${n.waze}">Waze a ${lbl}</a><a target="_blank" rel="noopener noreferrer" href="${n.maps}">Google Maps</a></div>`:['accepted','inprogress'].includes(t.status)?'<p class="muted">Sin coordenadas para Waze; confirma con la central.</p>':''}<div class="actions"><button class="button" data-view="${t.id}">Ver puntos y recorrido</button>${(actions[t.status]||[]).map(([a,label])=>`<button class="button ${a==='reject'?'':'primary'}" data-action="${a}" data-trip="${t.id}" ${canAct(t,a)?"":"disabled"}>${label}</button>`).join('')}</div></article>`;
    }).join(''):'<p class="muted">No tienes carreras asignadas.</p>';
    if(selected&&!allTrips.some(t=>t.id===selected))selected=null;
    if(!selected){const t=allTrips.find(x=>['accepted','inprogress'].includes(x.status));if(t)selected=t.id}
@@ -36,6 +37,7 @@
   if(e.target.closest('[data-retry]'))return load();
   const v=e.target.closest('[data-view]');if(v){selected=Number(v.dataset.view);mapCurrent();return;}
   const b=e.target.closest('[data-action]');if(!b)return;
+  if(b.disabled)return;
   try{await M.api('/api/trips/action','POST',{action:b.dataset.action,trip_id:Number(b.dataset.trip)});selected=Number(b.dataset.trip);M.notice('Estado actualizado');await load()}catch(err){M.notice(err.message,true)}
  });
  document.querySelectorAll('[data-status]').forEach(b=>b.addEventListener('click',async()=>{try{await M.api('/api/driver/status','POST',{status:b.dataset.status});if(b.dataset.status==='off')await stopGPS();await load()}catch(err){M.notice(err.message,true)}}));

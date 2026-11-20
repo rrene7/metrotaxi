@@ -66,3 +66,7 @@ Se observó que la línea podía quedar estática tras una actualización GPS y,
 - Riesgo: alterar una base activa durante desplegado. Control: bootstrap exclusivo de base completamente vacía, bandera explícita, negativa ante tablas faltantes.
 - Riesgo: mapa en blanco en dominio remoto. Control: servir `/map-config.js` desde API con proveedor raster HTTPS configurable. OSM para prueba limitada solamente con elección explícita.
 - Pruebas: `tests_cloud/test_railway_pilot.py`, `tests_cloud/test_manage_pilot.py` y `tests_cloud/test_postgres_pilot.py` en PostgreSQL efímero de GitHub Actions.
+
+## PRIV-106 / ARRIVAL-107 — privacidad y geocerca en despacho (20-11-2026)
+
+El pasajero ya no recibe ofertas ni datos del conductor antes de la aceptación; historial y carrera activa se separan en pestañas. El servidor verifica la cercanía GPS al punto de recogida (≤150 m) y destino (≤180 m), precisión ≤75 m y antigüedad ≤120 s para iniciar y finalizar. Sin coordenadas, bloquea la acción. La geocerca es un control piloto, no autenticación de GPS frente a suplantación; antes del uso comercial se requieren mecanismos antifraude y pruebas reales. Tests en `tests_cloud/test_cloud_flow.py` y `tests_cloud/test_map_route_persistence.cjs`.

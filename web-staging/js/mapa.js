@@ -54,7 +54,12 @@ window.MetroMap = (() => {
       const colors={available:'#16a36c',busy:'#f3a811',off:'#7e8995',pickup:'#1f69c5',destination:'#8c48c4',driver:'#16a36c'};
       const bounds=[];
       points.forEach(p=>{
-        const dot=window.L.circleMarker([p.lat,p.lng],{radius:p.kind==='driver'?9:8,color:'#fff',weight:2,fillColor:colors[p.kind]||'#e7a71b',fillOpacity:1});
+        // A taxi is represented by a small taxi symbol, not a location dot.
+        const taxi=['driver','available','busy','off'].includes(p.kind);
+        const dot=taxi ? window.L.marker([p.lat,p.lng],{icon:window.L.divIcon({
+          className:'metro-taxi-icon',html:'<span class="taxi-glyph" aria-label="Taxi">🚕</span>',
+          iconSize:[30,30],iconAnchor:[15,15]})}) :
+          window.L.circleMarker([p.lat,p.lng],{radius:8,color:'#fff',weight:2,fillColor:colors[p.kind]||'#e7a71b',fillOpacity:1});
         dot.bindPopup(`<strong>${MTCloud.esc(p.name||'Punto')}</strong>${p.detail?'<div>'+MTCloud.esc(p.detail)+'</div>':''}`);
         dot.addTo(layer);bounds.push([p.lat,p.lng]);
       });
@@ -93,7 +98,7 @@ window.MetroMap = (() => {
         info(`Ruta vial de PRUEBA: ${(one.distance/1000).toFixed(1)} km · aprox. ${Math.round(one.duration/60)} min; no garantiza el tiempo real de llegada.`);
       }catch(e){await route(a,b);info('Falló la ruta por calles ('+e.message+'). Solo se muestra la línea recta; usa Waze para navegar.',true)}finally{clearTimeout(timer)}
     }
-    return {ready,update,pick,route,streetRoute,clearRoute,setView:(lat,lng)=>ready.then(()=>loaded&&good(lat,lng)&&map.setView([lat,lng],16))};
+    return {ready,update,pick,route,streetRoute,clearRoute,refresh:()=>ready.then(()=>loaded&&map.invalidateSize()),setView:(lat,lng)=>ready.then(()=>loaded&&good(lat,lng)&&map.setView([lat,lng],16))};
   }
   return {make,good};
 })();

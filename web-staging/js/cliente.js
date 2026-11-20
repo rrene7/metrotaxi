@@ -1,6 +1,21 @@
 'use strict';(async()=>{
  const M=MTCloud, el=id=>document.getElementById(id);let coords=null,destCoords=null,logged=false,lastTrips=[],selected=null,lastMapSelection=null,trackingActive=false,roadView=false;
  const token=new URLSearchParams(location.search).get('referido')||'';
+
+ const passengerStatuses={pending:'Buscando taxi',offered:'Buscando taxi',accepted:'Taxi confirmado',inprogress:'En viaje',done:'Finalizada',cancelled:'Cancelada'};
+ const passengerProgress={pending:'Metro Taxi recibió tu solicitud y está buscando una unidad.',
+   offered:'Metro Taxi está buscando una unidad.',
+   accepted:'Tu conductor confirmó la carrera y va hacia la recogida.',
+   inprogress:'Tu viaje está en curso.',
+   done:'Tu viaje ha finalizado.',
+   cancelled:'Tu solicitud fue cancelada.'};
+ function selectTab(tab){
+   document.querySelectorAll('.customer-pane').forEach(node=>node.classList.toggle('hidden',node.id!==tab));
+   document.querySelectorAll('[data-customer-tab]').forEach(btn=>btn.classList.toggle('tab-selected',btn.dataset.customerTab===tab));
+   if(tab==='customer-active')map.refresh?.();
+ }
+ document.querySelectorAll('[data-customer-tab]').forEach(btn=>btn.addEventListener('click',()=>selectTab(btn.dataset.customerTab)));
+
  const map=MetroMap.make({id:'map-cliente',onChoose:(type,lat,lng)=>{
    if(type==='pickup'){coords={pickup_lat:lat,pickup_lng:lng};if(!el('pickup').value)el('pickup').value='Punto marcado en el mapa';M.text('gps-info',`Recogida marcada: ${lat.toFixed(5)}, ${lng.toFixed(5)}. Confirma la referencia.`)}
    else{destCoords={dest_lat:lat,dest_lng:lng};if(!el('dest').value)el('dest').value='Destino marcado en el mapa';M.text('gps-info',`Destino marcado: ${lat.toFixed(5)}, ${lng.toFixed(5)}. Confirma los datos.`)}
@@ -27,12 +42,20 @@
   map.update(p,p.length>0);
   if(trackingActive){map.clearRoute();el('tracking-info').textContent='Selecciona una carrera activa para iniciar el seguimiento.';}
  }
- async function render(){try{const s=await M.me();logged=s.authenticated&&s.user.role==='customer';el('auth').classList.toggle('hidden',logged);el('account').classList.toggle('hidden',!logged);if(logged)await load();else if(s.authenticated)M.notice('Una sesión de personal está abierta. Usa una ventana privada para la cuenta del pasajero.',true)}catch(e){M.notice(e.message,true)}}
- async function load(){if(!logged)return;try{const [data,ms]=await Promise.all([M.api('/api/customer/trips'),M.api('/api/messages')]);lastTrips=data.trips;el('account-label').textContent=data.account.name+' · '+data.account.phone+' · Teléfono no verificado';
-  el('trips').innerHTML=data.trips.length?data.trips.map(t=>{
-   const d=t.driver,hasMap=MetroMap.good(t.pickup_lat,t.pickup_lng)||Boolean(d?.location),photo=d?.confirmed&&d?.photo_url?`<img class="card-photo" src="${M.esc(d.photo_url)}" alt="Foto del conductor asignado">`:'<div class="tag">Foto pendiente</div>';
-   return `<article class="item"><div class="row between"><strong>#MT-${t.id} · ${M.esc(t.pickup)}</strong><span class="status">${M.status(t.status)}</span></div><p>${M.esc(t.destination||'Destino por confirmar')}</p>${d?`<div class="row">${photo}<div>🚕 ${M.esc(d.name)} · ${M.esc(d.unit)}<br>Placa: ${M.esc(d.plate||'Pendiente')}<br>${M.esc([d.vehicle_make,d.vehicle_model,d.vehicle_color].filter(Boolean).join(' ')||'Vehículo por registrar')}<br>${d.confirmed?'Conductor confirmado':'Esperando aceptación'}</div></div>`:'<p class="muted">La central aún no ha asignado conductor.</p>'}${hasMap?`<button class="button" data-map="${t.id}">Ver mi recorrido y taxi asignado</button>`:''}${['pending','offered'].includes(t.status)?`<button class="button danger" data-cancel="${t.id}">Cancelar solicitud</button>`:''}</article>`;
-  }).join(''):'<p class="muted">Todavía no tienes carreras.</p>';
+ async function render(){try{const s=await M.me();logged=s.authenticated&&s.user.role==='customer';el('auth').classList.toggle('hidden',logged);el('account').classList.toggle('hidden',!logged);if(logged){selectTab('customer-active');await load();}else if(s.authenticated)M.notice('Una sesión de personal está abierta. Usa una ventana privada para la cuenta del pasajero.',true)}catch(e){M.notice(e.message,true)}}
+ async function load(){if(!logged)return;try{const [data,ms]=await Promise.all([M.api('/api/customer/trips'),M.api('/api/messages')]);lastTrips=data.trips;el('account-label').textContent=data.account.name+' · '+data.account.phone+' · '+(data.account.phone_verified?'Teléfono verificado':'Teléfono no verificado');
+  const active=data.trips.filter(t=>!['done','cancelled'].includes(t.status));
+  const history=data.trips.filter(t=>['done','cancelled'].includes(t.status));
+  if(!active.some(t=>t.id===selected)){selected=active[0]?.id||null;trackingActive=Boolean(selected);roadView=false;}
+  el('trips').innerHTML=active.length?active.map(t=>{
+   const d=t.driver?.confirmed?t.driver:null;
+   const photo=d?.photo_url?`<img class="card-photo" src="${M.esc(d.photo_url)}" alt="Foto del conductor confirmado">`:'<span class="tag">Foto no disponible</span>';
+   const driverInfo=d?`<div class="row">${photo}<div><b>🚕 ${M.esc(d.name)} · ${M.esc(d.unit)}</b><p>Placa: ${M.esc(d.plate||'Por registrar')}</p></div></div>`:'';
+   const status=passengerStatuses[t.status]||'Actualizando';
+   const hasMap=Boolean(d&&MetroMap.good(t.pickup_lat,t.pickup_lng));
+   return `<article class="item"><div class="row between"><strong>Carrera #MT-${t.id}</strong><span class="status">${status}</span></div><p class="customer-progress">${M.esc(passengerProgress[t.status]||'Actualizando estado...')}</p><p><b>Recogida:</b> ${M.esc(t.pickup)}</p><p><b>Destino:</b> ${M.esc(t.destination||'Por confirmar')}</p>${driverInfo}<div class="actions">${hasMap?`<button class="button" data-map="${t.id}">Ver mi taxi en el mapa</button>`:''}${['pending','offered'].includes(t.status)?`<button class="button danger" data-cancel="${t.id}">Cancelar</button>`:''}</div></article>`;
+  }).join(''):'<p class="muted">No tienes una carrera activa.</p>';
+  el('trip-history').innerHTML=history.length?history.map(t=>`<article class="item"><div class="row between"><strong>#MT-${t.id}</strong><span class="status">${passengerStatuses[t.status]||'Finalizada'}</span></div><p>Recogida: ${M.esc(t.pickup)}</p><p>Destino: ${M.esc(t.destination||'No registrado')}</p></article>`).join(''):'<p class="muted">Aún no tienes carreras anteriores.</p>';
   el('messages').innerHTML=ms.messages.length?ms.messages.slice().reverse().map(m=>`<article class="item"><b>${m.sender==='customer'?'Tú':'Central Metro Taxi'}</b><p>${M.esc(m.body)}</p></article>`).join(''):'<p>Sin mensajes.</p>';
   showSelected();
  }catch(e){el('trips').innerHTML=`<div class="error">${M.esc(e.message)} <button class="button" data-retry="1">Reintentar</button></div>`}}
@@ -53,7 +76,7 @@
  }
  el('trips').addEventListener('click',async e=>{
   if(e.target.closest('[data-retry]'))return load();const a=e.target.closest('[data-map]'),c=e.target.closest('[data-cancel]');
-  if(a){await showRoute(Number(a.dataset.map));el('route-by-road').classList.remove('hidden');return;}
+  if(a){selectTab('customer-active');await showRoute(Number(a.dataset.map));el('route-by-road').classList.remove('hidden');return;}
   if(c)try{await M.api('/api/trips/cancel','POST',{trip_id:Number(c.dataset.cancel)});await load();M.notice('Solicitud cancelada')}catch(err){M.notice(err.message,true)}
  });
  el('route-by-road').addEventListener('click',()=>{if(selected)showRoute(selected,true)});
