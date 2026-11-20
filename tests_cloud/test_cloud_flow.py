@@ -278,4 +278,30 @@ class CloudFlowTests(unittest.TestCase):
 
 
 
+    def test_operator_can_confirm_point_and_passenger_receives_it(self):
+        with self.app.state.engine.begin() as c:
+            c.execute(insert(staff).values(username='operador_puntos',
+                password_hash=password_hash('clave-operador-prueba'),role='operator',driver_id=None))
+        with TestClient(self.app) as operator:
+            self.assertEqual(operator.post('/api/login',json={'username':'operador_puntos',
+                'password':'clave-operador-prueba'}).status_code,200)
+            tid=self.new_trip()
+            update_point={'trip_id':tid,'point':'pickup','lat':9.082,'lng':-79.283,
+                'expected_lat':9.08,'expected_lng':-79.28,
+                'method':'provided_coordinates','confirmed_with_passenger':True}
+            self.assertEqual(operator.post('/api/trips/point',json=update_point,
+                headers=self.csrf(operator)).status_code,200)
+            own=self.customer.get('/api/customer/trips').json()['trips'][0]
+            self.assertEqual(own['pickup_lat'],9.082)
+            self.assertEqual(own['pickup_lng'],-79.283)
+            self.assertEqual(self.other_customer.get('/api/customer/trips').json()['trips'],[])
+            from cloud.schema import audit
+            with self.app.state.engine.connect() as c:
+                record=c.execute(select(audit).where(audit.c.trip_id==tid,
+                    audit.c.action=='trip_point_confirmed')).mappings().first()
+            self.assertEqual(record['actor_role'],'operator')
+            self.assertIn('method=provided_coordinates',record['detail'])
+
+
+
 if __name__=='__main__':unittest.main()
