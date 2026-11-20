@@ -1,0 +1,35 @@
+# Metro Taxi — piloto gratuito de API en Render con PostgreSQL EXTERNO (Aiven).
+# No crea una base PostgreSQL en Render ni almacena contraseñas en GitHub.
+# El arranque requiere dominio HTTPS y variables privadas configuradas en Render.
+services:
+  - type: web
+    name: metrotaxi-api-piloto
+    runtime: docker
+    plan: free
+    repo: https://github.com/rrene7/metrotaxi
+    branch: main
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    autoDeployTrigger: checksPass
+    envVars:
+      # Pega la URL de Aiven con TLS (sslmode=require) SOLO en Render.
+      - key: DATABASE_URL
+        sync: false
+      # https://<dominio-real>.onrender.com; para fase Netlify, agregar su origen HTTPS.
+      - key: METRO_ALLOWED_ORIGINS
+        sync: false
+      # <dominio-real>.onrender.com (sin protocolo).
+      - key: METRO_ALLOWED_HOSTS
+        sync: false
+      - key: METRO_PILOT_USER
+        value: metrotaxi
+      # Render genera una clave de 256 bits; consultarla y conservarla de forma privada.
+      - key: METRO_PILOT_PASSWORD
+        generateValue: true
+      # Debe ser 1 SOLO para base nueva; cambiar a 0 tras primer arranque.
+      - key: METRO_BOOTSTRAP_EMPTY_DB
+        sync: false
+      # Mantener 0 hasta confirmar proveedor de tiles autorizado.
+      - key: METRO_PILOT_OSM_TILES
+        value: "0"

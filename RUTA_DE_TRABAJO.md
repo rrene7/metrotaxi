@@ -174,3 +174,12 @@ En Linux/macOS o CI, ejecutar **ambos** comandos: `python scripts/validar_entreg
 - CLI `cloud.manage --init-schema` ahora se niega a operar sobre cualquier base con tablas, aunque esté parcialmente inicializada. Registrar migraciones futuras por separado con respaldo y revisión.
 - Tests automáticos `tests_cloud/test_pilot_deploy_readiness.py`; mantener validaciones de los flujos, roles, CSRF y PostgreSQL temporal.
 - Sigue pendiente: autorización del propietario para crear Railway, conectar repositorio, variables privadas/hostname, bootstrap, cuentas ficticias, pruebas reales en teléfonos y entorno con mapas/rutas autorizados.
+
+
+## DEPLOY-110 — Render Free + Aiven PostgreSQL Free + Netlify (20-11-2026)
+
+- Se añade `render.yaml` sin credenciales, con web Docker Free y variables privadas solicitadas en el panel Render. No se crea PostgreSQL de Render; la base externa prevista es Aiven.
+- Se agrega `docs/RENDER_AIVEN_NETLIFY.md` con TLS, límites de suspensión Free, inicialización de esquema vacío, despliegue Netlify con proxy HTTPS y validaciones de cookies/CSRF/Origin.
+- Regresión `tests_cloud/test_render_blueprint.py` garantiza que el Blueprint conserve `plan: free` y no incluya secretos o bases de pago.
+- **Acceso externo:** la integración Render todavía figura sin conexión activa cuando se consulta desde ChatGPT; no hay dominio Render, base Aiven ni web Netlify verificados. Nunca afirmar que se desplegó por subir el YAML a GitHub.
+- Limitación funcional importante: los planes gratuitos pueden suspenderse; además Render Free puede no ofrecer terminal interactiva para crear la primera cuenta de administrador. No introducir cuentas semilla públicas o credenciales estáticas por solucionar ese problema.
