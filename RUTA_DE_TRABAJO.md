@@ -154,3 +154,13 @@ En Linux/macOS o CI, ejecutar **ambos** comandos: `python scripts/validar_entreg
 - Conductor: botón Iniciar/Finalizar deshabilitado si no hay GPS reciente y suficientemente preciso cerca de recogida/destino; seguridad aplicada **también en el servidor**.
 - Mapa: taxi con icono 🚕 en vez de punto; llamadas GPS y recorrido siguen sin depender de las baldosas.
 - No trasladar estos cambios a producción sin prueba física GPS, protección frente a GPS falsificado, UX para solicitudes sin coordenadas y proveedor autorizado de mapas.
+
+## POINT-108 — Coordinadas verificadas por la central (20-11-2026)
+
+- Problema: una carrera por llamada/WhatsApp sin latitud-longitud quedaba bloqueada por ARRIVAL-107; no se permite saltarse la geocerca para iniciar/finalizar.
+- Implementado: la central puede abrir «Marcar recogida/destino», seleccionar manualmente un punto del mapa o escribir coordenadas que el pasajero proporcionó explícitamente y confirmar la verificación. **Nunca** geocodificar ni inventar coordenadas desde texto sin confirmación.
+- API: `POST /api/trips/point`, rol admin/operador, CSRF, verificación de Origin, coordenadas y confirmación, auditoría de actor y método; `expected_lat/expected_lng` protege contra ediciones simultáneas.
+- Recogida solo puede cambiarse en `pending/offered/accepted`; destino hasta `inprogress`; ambas coordenadas quedan inmutables tras `done/cancelled`.
+- La actualización llega al pasajero y conductor mediante el sondeo existente (sin notificación push). Un punto validado por central NO es GPS del conductor; el conductor sigue necesitando posición de dispositivo precisa y reciente para las acciones de llegada.
+- Pruebas agregadas: ciclo completo de carrera por llamada sin GPS, CSRF, autorización, auditoría, entradas inválidas, conflictos y cambios tras cierre. Revisar el workflow de GitHub antes de fusionar.
+- Pendiente: ensayo visual local y en teléfono, política de cambios informados al pasajero cuando se actualizan puntos, HTTPS PostgreSQL real, validación de GPS frente a falsificación, proveedor cartográfico comercial.

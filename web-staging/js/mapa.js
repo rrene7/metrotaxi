@@ -30,7 +30,7 @@ window.MetroMap = (() => {
     const root=document.getElementById(config.id), status=document.getElementById(config.id+'-status');
     let map,layer,road,roadMode=null,points=[],pickMode=null,tilesReady=false,loaded=false,cb=config.onChoose||(()=>{});
     const info=(str,error=false)=>{if(status){status.textContent=str;status.classList.toggle('map-error',error)}};
-    if(!root) return {ready:Promise.resolve(false), update:()=>{}, pick:()=>{}, route:async()=>{}, clearRoute:()=>{}};
+    if(!root) return {ready:Promise.resolve(false), update:()=>{}, pick:()=>{}, cancelPick:()=>{}, route:async()=>{}, clearRoute:()=>{}};
     const ready=loadLibrary().then(L=>{
       const initial=POINTS[config.station]||[9.092,-79.33];
       map=L.map(root,{zoomControl:true}).setView(initial,12);
@@ -67,6 +67,7 @@ window.MetroMap = (() => {
       if(points.length && !road)info(`Puntos GPS visibles: ${points.length}. No se muestran ubicaciones simuladas ni vencidas.`);
     }
     function clearRoute(){if(road && loaded){map.removeLayer(road);road=null;}roadMode=null;}
+    function cancelPick(){pickMode=null;root.style.cursor='';}
     function pick(which){pickMode=which;if(loaded)root.style.cursor='crosshair';info(`Pulsa el mapa para marcar ${which==='pickup'?'recogida':'destino'}. No se calculará dirección textual automáticamente.`);}
     async function route(a,b,options={}){
       if(!good(a?.lat,a?.lng)||!good(b?.lat,b?.lng)){info('No hay dos ubicaciones GPS válidas para calcular el recorrido.',true);return;}
@@ -98,7 +99,7 @@ window.MetroMap = (() => {
         info(`Ruta vial de PRUEBA: ${(one.distance/1000).toFixed(1)} km · aprox. ${Math.round(one.duration/60)} min; no garantiza el tiempo real de llegada.`);
       }catch(e){await route(a,b);info('Falló la ruta por calles ('+e.message+'). Solo se muestra la línea recta; usa Waze para navegar.',true)}finally{clearTimeout(timer)}
     }
-    return {ready,update,pick,route,streetRoute,clearRoute,refresh:()=>ready.then(()=>loaded&&map.invalidateSize()),setView:(lat,lng)=>ready.then(()=>loaded&&good(lat,lng)&&map.setView([lat,lng],16))};
+    return {ready,update,pick,cancelPick,route,streetRoute,clearRoute,refresh:()=>ready.then(()=>loaded&&map.invalidateSize()),setView:(lat,lng)=>ready.then(()=>loaded&&good(lat,lng)&&map.setView([lat,lng],16))};
   }
   return {make,good};
 })();

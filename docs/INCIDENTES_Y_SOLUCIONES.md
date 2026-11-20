@@ -70,3 +70,13 @@ Se observó que la línea podía quedar estática tras una actualización GPS y,
 ## PRIV-106 / ARRIVAL-107 — privacidad y geocerca en despacho (20-11-2026)
 
 El pasajero ya no recibe ofertas ni datos del conductor antes de la aceptación; historial y carrera activa se separan en pestañas. El servidor verifica la cercanía GPS al punto de recogida (≤150 m) y destino (≤180 m), precisión ≤75 m y antigüedad ≤120 s para iniciar y finalizar. Sin coordenadas, bloquea la acción. La geocerca es un control piloto, no autenticación de GPS frente a suplantación; antes del uso comercial se requieren mecanismos antifraude y pruebas reales. Tests en `tests_cloud/test_cloud_flow.py` y `tests_cloud/test_map_route_persistence.cjs`.
+
+## POINT-108 — Carrera sin GPS no podía iniciar ni finalizar (20-11-2026)
+
+**Síntoma:** la central registraba una carrera telefónica sin coordenadas de recogida/destino y el servidor la bloqueaba correctamente por la geocerca, pero la central no tenía cómo registrar las coordenadas confirmadas después.
+
+**Causa:** faltaban el endpoint autenticado para corregir puntos y su control en la interfaz. No corresponde eliminar ARRIVAL-107 porque permitiría marcar una carrera desde cualquier lugar.
+
+**Solución:** API `POST /api/trips/point` con rol admin/operador, CSRF, Origin, confirmación explícita con pasajero, validación numérica/finita, control por estado, actualización transaccional con comprobación de versión de coordenadas y auditoría. La central selecciona sobre mapa o introduce datos recibidos; se etiqueta como punto confirmado, no como GPS del conductor.
+
+**Regresión obligatoria:** probar con conductor sin GPS (409), cargar punto de recogida confirmado, iniciar solo cerca, registrar destino en curso, finalizar solo cerca, negar cambio de punto al cerrar, negar usuarios ajenos y coordenadas inválidas. Tests en `tests_cloud/test_cloud_flow.py`, guardias de la interfaz en `tests_cloud/test_web_guard.py`.

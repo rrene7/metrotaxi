@@ -37,3 +37,18 @@ scripts\validar_entrega.bat
 ```
 
 **Estado de pruebas manuales en esta entrega (20-11-2026):** pendiente de validación en el navegador y teléfono de la instalación del usuario. No marcar como aprobadas sin evidencia.
+
+
+## POINT-108 — Central recupera coordenadas confirmadas (nueva comprobación manual)
+
+- [ ] Registrar una carrera desde la central sin coordenadas; el conductor no puede iniciarla por no tener punto de recogida.
+- [ ] Abrir «Marcar recogida en mapa» para esa carrera, pulsar el mapa o introducir dos coordenadas proporcionadas por el pasajero, y marcar la casilla de confirmación.
+- [ ] Cancelar sin guardar: las coordenadas no cambian. Guardar con confirmación: la central y el conductor ven el punto tras actualizar.
+- [ ] Sin el consentimiento del pasajero o sin dos valores numéricos válidos la API devuelve 400; el error es visible en la central.
+- [ ] Dos operadores editan el mismo punto: el segundo no sobrescribe silenciosamente y recibe 409.
+- [ ] Al iniciar el viaje, la recogida no se puede modificar; el destino sí hasta el final. Tras terminar/cancelar, ambos quedan bloqueados.
+- [ ] Las acciones «Iniciar» y «Finalizar» siguen exigiendo GPS reciente/preciso del conductor cerca del punto; **el punto confirmado por la central no suplanta el GPS del vehículo**.
+- [ ] Desactivar Internet/mapas: el formulario permite escribir coordenadas verificadas manualmente y el resto de la central carga sin quedar bloqueada.
+- [ ] Confirmar que el cambio de punto no expone teléfonos ni posiciones de otros clientes al conductor; probar en Chrome y Android antes de operar en calle.
+
+**Estado:** automatización CI pendiente de corroborar en PR; inspección manual en navegadores/teléfonos pendiente.

@@ -28,6 +28,18 @@ class CloudWebChecks(unittest.TestCase):
         client=(WEB/'js/cliente.js').read_text()
         self.assertNotIn("/api/fleet",client)
         self.assertIn("/api/customer/trips",client)
+    def test_central_verified_point_form(self):
+        central=(WEB/'central.html').read_text()
+        script=(WEB/'js/central.js').read_text()
+        mapa=(WEB/'js/mapa.js').read_text()
+        for marker in ('id="point-editor"','id="point-form"','id="point-confirm"','id="point-lat"','id="point-lng"','id="point-pick-again"'):
+            self.assertIn(marker,central)
+        self.assertIn("M.api('/api/trips/point','POST'",script)
+        self.assertIn('confirmed_with_passenger:true',script)
+        self.assertIn('expected_lat:',script)
+        self.assertIn('onChoose:',script)
+        self.assertIn('cancelPick',mapa)
+
     def test_android_frontend_entry(self):
         java=(WEB.parents[0]/'android-conductor/app/src/main/java/pa/metrotaxi/conductor/MainActivity.java').read_text()
         self.assertIn('"/ingresar.html"',java)
