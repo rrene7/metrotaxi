@@ -9,7 +9,7 @@ const buttons={idle:{cliente:[['request','Solicitar taxi']]} ,pending:{central:[
  offered:{conductor:[['accept','Aceptar carrera'],['reject','Rechazar carrera']]} ,
  accepted:{conductor:[['move','Simular avance del taxi'],['start','Recoger e iniciar']]} ,
  inprogress:{conductor:[['move','Simular avance del taxi'],['complete','Finalizar carrera']]} ,
- complete:{cliente:[['restart','Reiniciar demostración']]}};
+ complete:{cliente:[['restart','Reiniciar demostración']]},rejected:{central:[['offer','Reasignar MT-01']],cliente:[['restart','Reiniciar demostración']]}};
 const texts={idle:'No hay carreras activas.',pending:'Carrera MT-DEMO pendiente en la central.',offered:'Carrera MT-DEMO ofrecida a MT-01. Esperando al conductor.',accepted:'MT-01 aceptó la carrera. El taxi se acerca a la recogida.',inprogress:'Pasajero recogido. El conductor avanza hacia el destino.',complete:'Carrera simulada finalizada.',rejected:'Carrera rechazada. La central debe reasignar.'};
 let map=null,layer=null,line=null,baseOk=false,errors=0;
 const mapEl=$$('map');
