@@ -1,2 +1,0 @@
-# SVG QR generation on the Python demo server (no Pillow required)
-qrcode>=8.0,<9
