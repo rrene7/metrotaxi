@@ -1,0 +1,27 @@
+name: Metro Taxi - Comprobar piloto HTTPS
+on:
+  workflow_dispatch:
+    inputs:
+      pilot_url:
+        description: "Dominio HTTPS del piloto (sin claves), ej. https://nombre.up.railway.app"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  security-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Obtener codigo
+        uses: actions/checkout@v4
+      - name: Preparar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verificar PostgreSQL y acceso privado (sin credenciales)
+        env:
+          METRO_PILOT_URL: ${{ inputs.pilot_url }}
+        run: python -m scripts.verificar_piloto_https

@@ -2,12 +2,23 @@
 import argparse
 import getpass
 import os
-from sqlalchemy import create_engine, insert, select
+from sqlalchemy import create_engine, insert, select, inspect
 from .app import password_hash
+from .pilot_tools import ensure_schema
 from .pilot_tools import normalize_postgres_url
-from .schema import metadata, staff, drivers
+from .schema import staff, drivers
 
 STATIONS=('Pacora', '24 de Diciembre')
+
+
+def initialize_empty_schema(engine):
+    """Opt-in bootstrap for an entirely empty database; no create_all on partial DBs."""
+    existing=inspect(engine).get_table_names()
+    if existing:
+        raise RuntimeError('Base no vacía: --init-schema nunca modifica tablas existentes. '
+                           'Usa migraciones revisadas y respaldo.')
+    ensure_schema(engine,allow_empty_bootstrap=True)
+
 
 
 def create_staff(engine, user, pwd, *, role='admin', driver=None):
@@ -42,8 +53,8 @@ def main():
     engine=create_engine(dburl,pool_pre_ping=True)
     try:
         if opts.init_schema:
-            metadata.create_all(engine)
-            print('Estructura inicial creada. No se importa SQLite.')
+            initialize_empty_schema(engine)
+            print('Esquema inicial creado sobre base completamente vacía. No se importa SQLite.')
             return
         role='driver' if opts.create_driver else 'operator' if opts.create_operator else 'admin'
         driver=None
