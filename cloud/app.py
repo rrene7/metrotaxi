@@ -416,6 +416,64 @@ def create_app(database_url=None, *, test_mode=False, auto_create=False):
             write_audit(c,s,'ride_entered_by_central',tid)
         return JSONResponse({'ok':True,'id':tid,'status':'pending'},status_code=201)
 
+    @app.post('/api/trips/point')
+    async def set_trip_point(request: Request):
+        """Central confirms coordinates provided by the rider or chosen on map.
+
+        Does not geocode, invent a GPS fix or override closed rides. The stored
+        point is a passenger-confirmed place, not the operator's device GPS.
+        """
+        verify_origin(request)
+        session=auth(request,('admin','operator'),csrf=True)
+        b=await request.json()
+        tid=b.get('trip_id')
+        if isinstance(tid,bool) or not isinstance(tid,int) or tid < 1:
+            raise HTTPException(400,'Identificador de carrera inválido')
+        kind=b.get('point')
+        if kind not in ('pickup','destination'):
+            raise HTTPException(400,'Indica recogida o destino')
+        method=b.get('method')
+        if method not in ('map_click','provided_coordinates'):
+            raise HTTPException(400,'Indica el origen explícito de las coordenadas')
+        if b.get('confirmed_with_passenger') is not True:
+            raise HTTPException(400,'Confirma el punto con el pasajero antes de guardarlo')
+        if 'expected_lat' not in b or 'expected_lng' not in b:
+            raise HTTPException(400,'Recarga la carrera antes de modificar el punto')
+        def validated_pair(lat,lng,allow_missing=False):
+            if allow_missing and lat is None and lng is None:
+                return None,None
+            if (isinstance(lat,bool) or isinstance(lng,bool)
+                    or not isinstance(lat,(int,float)) or not isinstance(lng,(int,float))
+                    or not math.isfinite(lat) or not math.isfinite(lng)
+                    or not -90 <= lat <= 90 or not -180 <= lng <= 180
+                    or (lat == 0 and lng == 0)):
+                raise HTTPException(400,'Introduce latitud y longitud verificadas y válidas')
+            return float(lat),float(lng)
+        lat,lng=validated_pair(b.get('lat'),b.get('lng'))
+        previous_lat,previous_lng=validated_pair(b['expected_lat'],b['expected_lng'],allow_missing=True)
+        states=('pending','offered','accepted') if kind=='pickup' else ('pending','offered','accepted','inprogress')
+        latcol=trips.c.pickup_lat if kind=='pickup' else trips.c.dest_lat
+        lngcol=trips.c.pickup_lng if kind=='pickup' else trips.c.dest_lng
+        with engine.begin() as c:
+            t=c.execute(select(trips).where(trips.c.id==tid)).mappings().first()
+            if not t:
+                raise HTTPException(404,'Carrera no encontrada')
+            if t['status'] not in states:
+                raise HTTPException(409,'Este punto ya no se puede modificar en esta etapa')
+            if t[latcol.name]!=previous_lat or t[lngcol.name]!=previous_lng:
+                raise HTTPException(409,'Otro operador modificó este punto; actualiza la central')
+            if lat==previous_lat and lng==previous_lng:
+                return {'ok':True,'trip_id':tid,'point':kind,'unchanged':True}
+            conditions=[trips.c.id==tid,trips.c.status==t['status'],
+                latcol.is_(None) if previous_lat is None else latcol==previous_lat,
+                lngcol.is_(None) if previous_lng is None else lngcol==previous_lng]
+            updated=c.execute(update(trips).where(and_(*conditions)).values({latcol:lat,lngcol:lng}))
+            if updated.rowcount!=1:
+                raise HTTPException(409,'Punto cambiado simultáneamente; actualiza y vuelve a confirmar')
+            write_audit(c,session,'trip_point_confirmed',tid,
+                        f'point={kind};method={method};confirmed_with_passenger=true;replaced={previous_lat is not None}')
+        return {'ok':True,'trip_id':tid,'point':kind,'lat':lat,'lng':lng,'status':t['status']}
+
     @app.post('/api/trips/assign')
     async def assign(request: Request):
         verify_origin(request)
