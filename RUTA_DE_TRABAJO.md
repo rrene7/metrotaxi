@@ -119,3 +119,10 @@ En Linux/macOS o CI, ejecutar **ambos** comandos: `python scripts/validar_entreg
 - Verificaciones locales antes de importar: `python scripts/validar_cloud.py` y `python scripts/validar_entrega.py --quick` aprobadas. Pruebas reales de mapa, PostgreSQL, Android y operación en carretera pendientes.
 - En la rama `main`, GitHub Actions ejecuta tests Python/JS y una compilación Android debug **sin distribuir APK**. Revisar los resultados antes de una nueva entrega.
 - El repositorio es **público**: prohibido subir credenciales, teléfonos/ubicaciones reales o los directorios de datos.
+
+## Continuación GitHub — ANDROID-BUILD-103 / MAP-104 (20-11-2026)
+
+- Corregido el import Java que bloqueaba la compilación Android y añadida guardia de regresión. La compilación Android en GitHub Actions sigue siendo puerta de calidad.
+- En la web staging el refresco GPS no borra el recorrido; se limpia al cambiar de carrera y al perder puntos válidos.
+- Prueba añadida: `tests_cloud/test_map_route_persistence.cjs`, invocada automáticamente por `scripts/validar_cloud.py`.
+- Pendiente: prueba real Android y navegador, proveedor de mapas/rutas para producción, PostgreSQL y Netlify HTTPS. No se ha distribuido un APK de uso comercial.

@@ -47,3 +47,9 @@
 **Corrección:** autorizar exclusivamente `http://127.0.0.1:8770` y `http://localhost:8770` además de `http://testserver` **solo en test_mode**. Ningún origen HTTP local se autoriza en producción. Mantener comprobación de contraseña y token CSRF.
 
 **Prevención:** `tests_cloud/test_login_origin_v102.py` prueba login, rechazo de orígenes externos, contraseña incorrecta, CSRF tras iniciar sesión y registro de cliente. Verificar manualmente en Chrome/Edge.
+
+## ANDROID-BUILD-103 y MAP-104 — CI y recorrido estable (20-11-2026)
+
+- **ANDROID-BUILD-103:** GitHub Actions falló en `:app:compileDebugJavaWithJavac`; `android.webkit.WebViewTransport` no es una clase de nivel superior. Se usa `WebView.WebViewTransport` y un guardia en `tests/test_android_source_v09.py`. Es obligatorio verificar el resultado real de Gradle en CI antes de afirmar que existe APK funcional.
+- **MAP-104:** `MetroMap.update()` eliminaba la polilínea cada vez que se actualizaban los taxis o las carreras. Ahora actualiza marcadores sin borrar la ruta; `clearRoute()` la limpia al cambiar de carrera o faltar puntos válidos. Prueba `tests_cloud/test_map_route_persistence.cjs`, incluida en `scripts/validar_cloud.py`.
+- **Pendientes:** comprobar mapas y GPS en Chrome/Android físico. El trazado en línea recta y el proveedor vial de pruebas no equivalen a ruta de producción ni garantizan tiempo de llegada.

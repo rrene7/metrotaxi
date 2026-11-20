@@ -7,7 +7,6 @@ import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Message;
-import android.webkit.WebViewTransport;
 import android.os.Build;
 import android.os.Bundle;
 import android.webkit.CookieManager;
@@ -61,7 +60,7 @@ public class MainActivity extends Activity {
                         openOutside(Uri.parse(url));w.destroy();return true;
                     }
                 });
-                WebViewTransport transport=(WebViewTransport) msg.obj;
+                WebView.WebViewTransport transport=(WebView.WebViewTransport) msg.obj;
                 transport.setWebView(child);msg.sendToTarget();return true;
             }
         });
