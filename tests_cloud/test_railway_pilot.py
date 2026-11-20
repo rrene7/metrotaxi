@@ -36,6 +36,12 @@ class RailwayPilotTests(unittest.TestCase):
             with self.subTest(key=key,value=value):
                 with self.assertRaises(RuntimeError):check_pilot_config(broken)
 
+    def test_railway_healthcheck_host_explicit(self):
+        env=self.env() | {'RAILWAY_PROJECT_ID':'demo-project'}
+        with self.assertRaises(RuntimeError):check_pilot_config(env)
+        env['METRO_ALLOWED_HOSTS']='mt-piloto.up.railway.app,healthcheck.railway.app'
+        self.assertEqual(check_pilot_config(env)[1],'metrotaxi')
+
     def test_only_empty_database_can_be_bootstrapped(self):
         with tempfile.TemporaryDirectory() as d:
             engine=create_engine('sqlite+pysqlite:///'+str(Path(d)/'test.sqlite'))
