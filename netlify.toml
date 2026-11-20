@@ -1,0 +1,16 @@
+# Mismo flujo de HidroLav507: GitHub main -> pruebas -> Netlify.
+# Publica exclusivamente la simulación sin usuarios reales (v0.x).
+# La aplicación funcional necesita API HTTPS + PostgreSQL; NO copiar el código privado al sitio.
+[build]
+  command = "node tests_cloud/test_netlify_public_demo.cjs"
+  publish = "netlify-public"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "geolocation=(), camera=(), microphone=()"
+    X-Robots-Tag = "noindex, nofollow"
+    Cache-Control = "no-store"

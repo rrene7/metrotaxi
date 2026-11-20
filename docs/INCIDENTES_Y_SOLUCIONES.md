@@ -89,3 +89,10 @@ El pasajero ya no recibe ofertas ni datos del conductor antes de la aceptación;
 **Corrección:** `initialize_empty_schema()` comprueba primero que no exista ninguna tabla y reutiliza `ensure_schema` de la barrera de piloto. Ante cualquier tabla previa falla sin alterarla. La opción de primer arranque sigue destinada solo a bases nuevas; las migraciones de datos requieren un proceso independiente.
 
 **Prevención:** `tests_cloud/test_pilot_deploy_readiness.py` comprueba base vacía, base con tablas y que un segundo intento no modifica tablas. El mismo test vigila dominios HTTPS y rechazo de rutas públicas sin contraseña.
+
+
+## NETLIFY-111 — Riesgo de desplegar pantallas de staging sin API (20-11-2026)
+
+**Problema evitado:** una conexión directa del repositorio a Netlify puede publicar `web-staging/` con botones que envían llamadas `/api/*` sin un backend HTTPS real, provocando inicio de sesión y solicitudes fallidas. Publicar el piloto local por error expondría datos y sesiones.
+
+**Solución:** un `netlify.toml` con carpeta pública específica `netlify-public/` que contiene únicamente la demostración ficticia conocida de GitHub Pages, más tests que rechazan pérdida de privacidad, caché inconsistente, configuraciones de pago y presencia de componentes privados. La actualización real del backend se hará en una fase independiente con HTTPS y pruebas de autorización/CSRF.
