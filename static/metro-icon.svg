@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Metro Taxi">
+<rect width="512" height="512" rx="92" fill="#0b1d32"/>
+<path d="M87 296h339l-38-104c-7-19-25-31-45-31H168c-20 0-37 12-45 31L87 296z" fill="#ffcf36"/>
+<path d="M153 207h206l22 60H131z" fill="#152b47"/>
+<rect x="72" y="289" width="368" height="112" rx="26" fill="#ffcf36"/>
+<circle cx="143" cy="402" r="34" fill="#f4f7fc" stroke="#0b1d32" stroke-width="16"/>
+<circle cx="368" cy="402" r="34" fill="#f4f7fc" stroke="#0b1d32" stroke-width="16"/>
+<rect x="199" y="110" width="116" height="48" rx="8" fill="#ffcf36"/>
+<text x="256" y="146" font-size="34" font-family="Arial, sans-serif" font-weight="800" text-anchor="middle" fill="#0b1d32">MT</text>
+<rect x="94" y="314" width="70" height="20" rx="8" fill="#fbf9f0"/>
+<rect x="346" y="314" width="70" height="20" rx="8" fill="#fbf9f0"/>
+</svg>

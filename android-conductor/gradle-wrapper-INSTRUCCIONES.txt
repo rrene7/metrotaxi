@@ -1,0 +1,5 @@
+Si Gradle no está instalado, deja que Android Studio configure Gradle 8.9 al abrir el proyecto.
+Con Gradle 8.9 instalado, en la carpeta android-conductor:
+    gradle wrapper --gradle-version 8.9
+Esto creará gradlew, gradlew.bat y gradle/wrapper/gradle-wrapper.jar.
+No subas claves de firma ni local.properties al repositorio.

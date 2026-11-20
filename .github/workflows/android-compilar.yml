@@ -1,0 +1,30 @@
+name: Android conductor - compilacion debug (sin distribucion)
+on:
+  push:
+    paths:
+      - 'android-conductor/**'
+      - '.github/workflows/android-compilar.yml'
+  pull_request:
+    paths:
+      - 'android-conductor/**'
+      - '.github/workflows/android-compilar.yml'
+jobs:
+  compilar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - name: Instalar Android SDK 35
+        run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+      - name: Compilar APK DEBUG (URL de prueba no operativa)
+        working-directory: android-conductor
+        run: gradle :app:assembleDebug -PmetroBaseUrl=https://example.invalid
+      - name: No publicar APK de desarrollo como operativa
+        run: echo 'Compilacion de control. No es publicacion ni GPS validado.'

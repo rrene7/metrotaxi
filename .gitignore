@@ -1,0 +1,15 @@
+/runtime/
+.env
+*.db
+*.sqlite3
+__pycache__/
+.pytest_cache/
+
+.venv/
+node_modules/
+*.log
+.DS_Store
+/_runtime_staging/
+/netlify-dist/
+*.db
+*.db-journal

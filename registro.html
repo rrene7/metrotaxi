@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Metro Taxi | Regístrate y solicita tu taxi</title><link rel="stylesheet" href="/static/app.css"></head>
+<body><header class="sitehead"><a class="brand" href="/cliente"><span class="logo">MT</span> METRO TAXI</a><nav class="toplinks"><span class="pill">Registro y carreras por QR</span></nav></header>
+<main class="container"><div class="gate qrregister">
+<h1>¡Viaja con Metro Taxi!</h1>
+<p class="lead">Escaneaste el código de uno de nuestros taxis. Regístrate para volver a pedir tus carreras directamente a la <b>central de Metro Taxi</b>.</p>
+<div class="notice">🧪 <b>MVP de prueba:</b> todavía no se envían vehículos reales. No introduzcas datos personales reales.</div>
+<div class="notice info" id="driverreference" role="status">Verificando que el QR pertenezca a una unidad afiliada...</div>
+<section class="panel"><h2>1. Registra tus datos (opcional para solicitar una carrera)</h2>
+<form id="referralform">
+<div class="field"><label for="refname">Nombre</label><input id="refname" required maxlength="80" minlength="2" autocomplete="name" placeholder="Tu nombre"></div>
+<div class="field"><label for="refphone">Teléfono en Panamá</label><input id="refphone" required maxlength="20" inputmode="tel" autocomplete="tel" placeholder="6000-0000 o +507 6000-0000"></div>
+<label class="consentline"><input type="checkbox" id="refconsent" required> Autorizo que <b>Metro Taxi</b> registre mi nombre, teléfono y unidad por la cual me afilié para gestionar mis futuras solicitudes. Puedo solicitar la revisión o eliminación de mis datos a la central. Este formulario no verifica mi número telefónico.</label>
+<label class="consentline"><input type="checkbox" id="refmarketing"> Deseo recibir promociones de Metro Taxi (opcional).</label>
+<button class="btn primary full" id="refsubmit" type="submit" disabled>Registrarme en Metro Taxi</button>
+<p class="small">Registrarse no crea una carrera. Los datos quedan en la central; el conductor no recibe tu teléfono.</p>
+</form><div id="refresult" class="detail hide" role="status"></div>
+</section>
+<details id="quick-request" class="panel quick-request" open>
+<summary>🚕 2. Solicitar taxi con mi ubicación actual</summary>
+<div class="quick-content"><p class="small">Puedes solicitar una carrera aunque no te registres. Elige <b>Usar mi ubicación actual</b> y acepta el permiso del dispositivo. Revisa la precisión indicada; el GPS no garantiza exactitud absoluta.</p>
+<form id="quicktripform">
+<div class="field"><label for="quickname">Nombre del pasajero</label><input id="quickname" required maxlength="80" autocomplete="name" placeholder="Tu nombre"></div>
+<div class="field"><label for="quickphone">Teléfono de contacto</label><input id="quickphone" type="tel" required maxlength="30" autocomplete="tel" placeholder="6000-0000"></div>
+<div class="field"><label for="quickstation">Sede que atenderá la solicitud</label><select id="quickstation"><option>24 de Diciembre</option><option>Pacora</option></select></div>
+<div class="geo-action"><button class="btn primary full" type="button" id="quickgps" disabled>📍 Usar mi ubicación actual</button>
+<div class="location-status" id="quickgpsstatus" role="status" aria-live="polite">El GPS no se ha activado. El permiso solo se pedirá cuando pulses el botón.</div>
+<div class="latlng hide" id="quickcoords"></div></div>
+<div class="field"><label for="quickpickup">Punto de recogida</label><input id="quickpickup" maxlength="150" required placeholder="GPS o describe el lugar donde esperas"></div>
+<div class="field"><label for="quickreference">Referencia para encontrarte</label><textarea id="quickreference" maxlength="150" rows="2" placeholder="Ej.: frente a la farmacia, casa azul, entrada de la barriada..."></textarea></div>
+<div class="field"><label for="quickdest">¿A dónde vas? (opcional)</label><input id="quickdest" maxlength="150" placeholder="Escribe tu destino"></div>
+<label class="consentline"><input type="checkbox" id="quickconsent" required> Autorizo a Metro Taxi a utilizar mi nombre, teléfono y, si decido compartirlas, mis coordenadas GPS <b>únicamente para gestionar esta solicitud</b>.</label>
+<button class="btn dark full" type="submit" id="quicksubmit" disabled>🚕 Enviar solicitud a la central</button>
+</form><div id="quickresult" class="detail hide" role="status"></div>
+<p class="small muted">¿Prefieres marcar el mapa y el destino manualmente? <a href="/cliente">Abrir solicitud completa</a>. La aplicación no comparte tu GPS continuamente.</p>
+</div></details>
+<p class="bottomfoot">El pasajero solicita a la central Metro Taxi, no directamente al conductor. La ubicación solo se envía al confirmar la solicitud. Este sistema aún funciona en entorno local de pruebas.</p>
+</div><p class="tiny" style="text-align:center"><a href="/cliente#mi-cuenta">¿Quieres consultar tus carreras y ver la foto de tu taxista? Crea tu cuenta Metro Taxi aquí.</a> El registro por QR no crea una contraseña ni verifica el teléfono.</p></main><div class="toast" id="toast" role="status"></div>
+<script src="/static/app.js"></script><script src="/static/referral.js"></script></body></html>
