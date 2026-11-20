@@ -51,7 +51,11 @@ class PostgreSQLPilotIntegration(unittest.TestCase):
             tripinfo=passenger.get('/api/customer/trips').json()['trips'][0]
             self.assertTrue(tripinfo['driver']['confirmed'])
             self.assertEqual(tripinfo['driver']['location']['lat'],9.081)
+            self.assertEqual(driver.post('/api/trips/action',json={'trip_id':tid,'action':'start'},headers=csrf(driver)).status_code,409)
+            driver.post('/api/driver/location',json={'lat':9.08,'lng':-79.28,'accuracy_m':9,'consent':True},headers=csrf(driver))
             self.assertEqual(driver.post('/api/trips/action',json={'trip_id':tid,'action':'start'},headers=csrf(driver)).status_code,200)
+            self.assertEqual(driver.post('/api/trips/action',json={'trip_id':tid,'action':'complete'},headers=csrf(driver)).status_code,409)
+            driver.post('/api/driver/location',json={'lat':9.09,'lng':-79.30,'accuracy_m':9,'consent':True},headers=csrf(driver))
             self.assertEqual(driver.post('/api/trips/action',json={'trip_id':tid,'action':'complete'},headers=csrf(driver)).status_code,200)
             self.assertEqual(admin.get('/api/trips').json()['trips'][0]['status'],'done')
 
