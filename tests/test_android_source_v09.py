@@ -31,6 +31,9 @@ class AndroidSourceGuards(unittest.TestCase):
         self.assertIn('MIXED_CONTENT_NEVER_ALLOW',activity)
         self.assertIn('setAllowFileAccess(false)',activity)
         self.assertIn('setSupportMultipleWindows(true)',activity)
+        # ANDROID-BUILD-103: WebViewTransport is nested under WebView.
+        self.assertNotIn('import android.webkit.WebViewTransport;', activity)
+        self.assertIn('WebView.WebViewTransport transport=', activity)
         self.assertIn('START_NOT_STICKY',service)
         self.assertIn('LocationManager.GPS_PROVIDER',service)
         self.assertIn('getElapsedRealtimeNanos()',service)

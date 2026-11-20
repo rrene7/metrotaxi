@@ -1,5 +1,5 @@
 'use strict';(async()=>{
- const M=MTCloud, el=id=>document.getElementById(id);let coords=null,destCoords=null,logged=false,lastTrips=[],selected=null;
+ const M=MTCloud, el=id=>document.getElementById(id);let coords=null,destCoords=null,logged=false,lastTrips=[],selected=null,lastMapSelection=null;
  const token=new URLSearchParams(location.search).get('referido')||'';
  const map=MetroMap.make({id:'map-cliente',onChoose:(type,lat,lng)=>{
    if(type==='pickup'){coords={pickup_lat:lat,pickup_lng:lng};if(!el('pickup').value)el('pickup').value='Punto marcado en el mapa';M.text('gps-info',`Recogida marcada: ${lat.toFixed(5)}, ${lng.toFixed(5)}. Confirma la referencia.`)}
@@ -8,6 +8,7 @@
  }});
  async function verifyReferral(){if(!token)return;try{const r=await M.api('/api/referral/'+encodeURIComponent(token));el('referral-info').textContent=`Registro por QR de la unidad ${r.unit} (${r.station}). Tu cuenta y las próximas carreras serán administradas por Metro Taxi.`;el('referral-info').classList.remove('hidden');}catch(_){el('referral-info').textContent='QR no válido o revocado. Puedes registrarte normalmente en Metro Taxi, sin atribución al conductor.';el('referral-info').classList.remove('hidden');}}
  function showSelected(){
+  if(selected!==lastMapSelection){map.clearRoute();lastMapSelection=selected;}
   if(selected){const t=lastTrips.find(x=>x.id===selected);
    if(t){const p=[];
     if(MetroMap.good(t.pickup_lat,t.pickup_lng))p.push({lat:t.pickup_lat,lng:t.pickup_lng,kind:'pickup',name:'Recogida MT-'+t.id});

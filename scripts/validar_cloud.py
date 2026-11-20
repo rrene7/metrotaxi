@@ -14,6 +14,8 @@ def main():
         return 1
     for js in sorted((ROOT/'web-staging/js').glob('*.js')):
         checks.append(('Sintaxis '+js.name,[node,'--check',str(js)]))
+    for js in sorted((ROOT/'tests_cloud').glob('*.cjs')):
+        checks.append(('Regresion JavaScript '+js.name,[node,str(js)]))
     checks += [('Python Cloud Tests',[sys.executable,'-m','unittest','discover','-s','tests_cloud','-v'])]
     checks += [('Instalador Windows DEP-101',[sys.executable,'-m','unittest','discover','-s','tests','-p','test_windows_staging_launcher_v101.py','-v'])]
     success=True
