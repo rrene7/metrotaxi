@@ -32,7 +32,7 @@ class PostgreSQLPilotIntegration(unittest.TestCase):
         with self.engine.begin() as c:
             driver_id=c.execute(insert(drivers).values(unit='CI-PG-01',name='Conductor ficticio',station='Pacora')).inserted_primary_key[0]
             c.execute(insert(staff),[
-                {'username':'ci_pg_admin','password_hash':password_hash('password-ficticia-admin'),'role':'admin'},
+                {'username':'ci_pg_admin','password_hash':password_hash('password-ficticia-admin'),'role':'admin','driver_id':None},
                 {'username':'ci_pg_driver','password_hash':password_hash('password-ficticia-driver'),'role':'driver','driver_id':driver_id},
             ])
         with TestClient(self.app) as admin,TestClient(self.app) as driver,TestClient(self.app) as passenger:
