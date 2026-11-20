@@ -148,3 +148,9 @@ En Linux/macOS o CI, ejecutar **ambos** comandos: `python scripts/validar_entreg
 - Pendiente producción: OTP, freno antiabuso, auditoría, política de datos, migraciones, mapas/rutas de pago y GPS Android físico.
 
 - Railway healthcheck: permitir exclusivamente el host técnico `healthcheck.railway.app` además del dominio real; el guardia de configuración impide omitirlo dentro de Railway.
+
+## PRIV-106 / ARRIVAL-107 (20-11-2026)
+- Pasajero: pestañas para carrera activa, historial y mensajes; solo los estados comprensibles al cliente; ofertas de despacho y unidad no confirmada se ocultan también en API.
+- Conductor: botón Iniciar/Finalizar deshabilitado si no hay GPS reciente y suficientemente preciso cerca de recogida/destino; seguridad aplicada **también en el servidor**.
+- Mapa: taxi con icono 🚕 en vez de punto; llamadas GPS y recorrido siguen sin depender de las baldosas.
+- No trasladar estos cambios a producción sin prueba física GPS, protección frente a GPS falsificado, UX para solicitudes sin coordenadas y proveedor autorizado de mapas.

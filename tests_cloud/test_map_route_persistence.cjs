@@ -12,6 +12,8 @@ const L={
   map(){return map},tileLayer(){return {on(){return this},addTo(){return this}}},
   layerGroup(){return {addTo(){return this},clearLayers(){}}},
   circleMarker(){return {bindPopup(){return this},addTo(){return this}}},
+  marker(){return {bindPopup(){return this},addTo(){return this}}},
+  divIcon(){return {}},
   polyline(){drawn++;return {addTo(){return this},getBounds(){return bounds}}},
   latLngBounds(){return bounds}
 };

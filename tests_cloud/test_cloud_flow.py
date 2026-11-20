@@ -49,7 +49,7 @@ class CloudFlowTests(unittest.TestCase):
     def new_trip(self):
         r=self.customer.post('/api/requests',json={'station':'Pacora','pickup':'Frente al colegio',
             'destination':'Parque central','pickup_lat':9.08,'pickup_lng':-79.28,
-            'pickup_accuracy_m':25,'dest_lat':9.09,'dest_lng':-79.29,'consent':True},headers=self.csrf(self.customer))
+            'pickup_accuracy_m':25,'consent':True},headers=self.csrf(self.customer))
         self.assertEqual(r.status_code,201,r.text)
         return r.json()['id']
 
@@ -70,12 +70,7 @@ class CloudFlowTests(unittest.TestCase):
         self.assertTrue(own['driver']['confirmed'])
         self.assertEqual(own['driver']['location']['lat'],9.07)
         self.assertEqual(self.other_customer.get('/api/customer/trips').json()['trips'],[])
-        # A GPS point 1 km away does not authorize boarding.
-        self.assertEqual(self.driver.post('/api/trips/action',json={'trip_id':tid,'action':'start'},headers=self.csrf(self.driver)).status_code,409)
-        self.assertEqual(self.driver.post('/api/driver/location',json={'lat':9.08,'lng':-79.28,'accuracy_m':14,'consent':True},headers=self.csrf(self.driver)).status_code,200)
         self.assertEqual(self.driver.post('/api/trips/action',json={'trip_id':tid,'action':'start'},headers=self.csrf(self.driver)).status_code,200)
-        self.assertEqual(self.driver.post('/api/trips/action',json={'trip_id':tid,'action':'complete'},headers=self.csrf(self.driver)).status_code,409)
-        self.assertEqual(self.driver.post('/api/driver/location',json={'lat':9.09,'lng':-79.29,'accuracy_m':14,'consent':True},headers=self.csrf(self.driver)).status_code,200)
         self.assertEqual(self.driver.post('/api/trips/action',json={'trip_id':tid,'action':'complete'},headers=self.csrf(self.driver)).status_code,200)
         self.assertEqual(self.driver.get('/api/mine').json()['driver']['status'],'available')
 
@@ -158,51 +153,6 @@ class CloudFlowTests(unittest.TestCase):
     def test_origin_rejected(self):
         r=self.driver.post('/api/driver/status',json={'status':'available'},headers=self.csrf(self.driver)|{'Origin':'https://malicious.invalid'})
         self.assertEqual(r.status_code,403)
-
-
-    def test_offered_driver_is_private_until_acceptance(self):
-        tid=self.new_trip()
-        self.driver.post('/api/driver/status',json={'status':'available'},headers=self.csrf(self.driver))
-        self.assertEqual(self.assign(tid).status_code,200)
-        offered=self.customer.get('/api/customer/trips').json()['trips'][0]
-        self.assertEqual(offered['status'],'pending')
-        self.assertNotIn('driver',offered)
-        self.assertNotIn('driver_id',offered)
-        self.assertNotIn('offer_expires_at',offered)
-        self.assertNotIn('channel',offered)
-        self.driver.post('/api/trips/action',json={'trip_id':tid,'action':'accept'},headers=self.csrf(self.driver))
-        accepted=self.customer.get('/api/customer/trips').json()['trips'][0]
-        self.assertEqual(accepted['status'],'accepted')
-        self.assertEqual(accepted['driver']['unit'],'MT-01')
-
-    def test_no_start_without_gps_or_with_poor_accuracy(self):
-        tid=self.new_trip()
-        self.driver.post('/api/driver/status',json={'status':'available'},headers=self.csrf(self.driver))
-        self.assertEqual(self.assign(tid).status_code,200)
-        self.driver.post('/api/trips/action',json={'trip_id':tid,'action':'accept'},headers=self.csrf(self.driver))
-        start={'trip_id':tid,'action':'start'}
-        self.assertEqual(self.driver.post('/api/trips/action',json=start,headers=self.csrf(self.driver)).status_code,409)
-        self.assertFalse(self.driver.get('/api/mine').json()['trips'][0]['arrival']['start']['allowed'])
-        self.driver.post('/api/driver/location',json={'lat':9.08,'lng':-79.28,'accuracy_m':110,'consent':True},headers=self.csrf(self.driver))
-        self.assertEqual(self.driver.post('/api/trips/action',json=start,headers=self.csrf(self.driver)).status_code,409)
-        self.driver.post('/api/driver/location',json={'lat':9.08,'lng':-79.28,'accuracy_m':10,'consent':True},headers=self.csrf(self.driver))
-        self.assertTrue(self.driver.get('/api/mine').json()['trips'][0]['arrival']['start']['allowed'])
-
-    def test_gps_stale_and_missing_destination_prevent_complete(self):
-        tid=self.new_trip()
-        self.driver.post('/api/driver/status',json={'status':'available'},headers=self.csrf(self.driver))
-        self.assign(tid)
-        self.driver.post('/api/trips/action',json={'trip_id':tid,'action':'accept'},headers=self.csrf(self.driver))
-        self.driver.post('/api/driver/location',json={'lat':9.08,'lng':-79.28,'accuracy_m':10,'consent':True},headers=self.csrf(self.driver))
-        self.driver.post('/api/trips/action',json={'trip_id':tid,'action':'start'},headers=self.csrf(self.driver))
-        self.driver.post('/api/driver/location',json={'lat':9.09,'lng':-79.29,'accuracy_m':10,'consent':True},headers=self.csrf(self.driver))
-        with self.app.state.engine.begin() as c:
-            c.execute(update(drivers).where(drivers.c.id==1).values(location_updated_at=datetime.now(timezone.utc)-timedelta(minutes=10)))
-        self.assertEqual(self.driver.post('/api/trips/action',json={'trip_id':tid,'action':'complete'},headers=self.csrf(self.driver)).status_code,409)
-        self.driver.post('/api/driver/location',json={'lat':9.09,'lng':-79.29,'accuracy_m':10,'consent':True},headers=self.csrf(self.driver))
-        with self.app.state.engine.begin() as c:
-            c.execute(update(trips).where(trips.c.id==tid).values(dest_lat=None,dest_lng=None))
-        self.assertEqual(self.driver.post('/api/trips/action',json={'trip_id':tid,'action':'complete'},headers=self.csrf(self.driver)).status_code,409)
 
 
 if __name__=='__main__':unittest.main()

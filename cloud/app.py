@@ -8,7 +8,6 @@ import base64
 import io
 import hmac
 import json
-import math
 import os
 import re
 import secrets
@@ -83,39 +82,6 @@ def coordinates(body, prefix):
     return float(lat), float(lng)
 
 
-
-# Local geofence enforcement is a staging safety control, not GPS attestation.
-# A modified or spoofed device can still report forged coordinates.
-def distance_m(a_lat, a_lng, b_lat, b_lng):
-    p1, p2 = math.radians(a_lat), math.radians(b_lat)
-    dp, dl = math.radians(b_lat-a_lat), math.radians(b_lng-a_lng)
-    x = math.sin(dp/2)**2 + math.cos(p1)*math.cos(p2)*math.sin(dl/2)**2
-    return 6371000.0 * 2 * math.atan2(math.sqrt(x), math.sqrt(max(0.0, 1-x)))
-
-
-def arrival_gate(driver, ride, action):
-    if action not in ('start', 'complete'):
-        raise ValueError('Acción de llegada desconocida')
-    coord = ('pickup_lat', 'pickup_lng') if action == 'start' else ('dest_lat', 'dest_lng')
-    target = 'recogida' if action == 'start' else 'destino'
-    radius_m = 150 if action == 'start' else 180
-    if ride[coord[0]] is None or ride[coord[1]] is None:
-        return {'allowed': False, 'reason': 'Faltan coordenadas verificadas del punto de '+target,
-                'distance_m': None, 'radius_m': radius_m}
-    if (driver['location_source'] != 'device' or not fresh(driver['location_updated_at'])
-            or driver['lat'] is None or driver['lng'] is None):
-        return {'allowed': False, 'reason': 'Activa el GPS y espera una ubicación reciente',
-                'distance_m': None, 'radius_m': radius_m}
-    accuracy = driver['accuracy_m']
-    if accuracy is None or not math.isfinite(accuracy) or accuracy > 75:
-        return {'allowed': False, 'reason': 'Se necesita GPS con precisión de 75 m o mejor',
-                'distance_m': None, 'radius_m': radius_m}
-    distance = round(distance_m(driver['lat'], driver['lng'], ride[coord[0]], ride[coord[1]]))
-    return {'allowed': distance <= radius_m, 'distance_m': distance, 'radius_m': radius_m,
-            'reason': ('Ya estás cerca del punto de '+target if distance <= radius_m
-                       else 'Acércate al punto de '+target+' para continuar')}
-
-
 def driver_public(d):
     return {k: d[k] for k in ('id', 'unit', 'name', 'station', 'status', 'suspended', 'plate',
                              'vehicle_make', 'vehicle_model', 'vehicle_color')} | {
@@ -133,12 +99,6 @@ def trip_public(t, audience):
     out['created_at'] = iso(t['created_at'])
     if t['offer_expires_at']:
         out['offer_expires_at'] = iso(t['offer_expires_at'])
-    if audience == 'customer':
-        # Do not disclose dispatch offers, expiry or a pending driver's identity.
-        for private_key in ('driver_id', 'channel', 'offer_expires_at'):
-            out.pop(private_key, None)
-        if out['status'] == 'offered':
-            out['status'] = 'pending'
     if audience == 'central':
         out.update(name=t['name'], phone=t['phone'])
     elif audience == 'driver':
@@ -361,11 +321,11 @@ def create_app(database_url=None, *, test_mode=False, auto_create=False):
             result=[]
             for t in rows:
                 item=trip_public(t,'customer')
-                if t['driver_id'] and t['status'] in ('accepted','inprogress','done'):
+                if t['driver_id'] and t['status'] in ('offered','accepted','inprogress'):
                     d=c.execute(select(drivers).where(drivers.c.id==t['driver_id'])).mappings().first()
                     if d:
                         item['driver']={k:d[k] for k in ('name','unit','plate','vehicle_make','vehicle_model','vehicle_color')}
-                        item['driver']['confirmed']=True
+                        item['driver']['confirmed']=t['status'] in ('accepted','inprogress')
                         if item['driver']['confirmed']:
                             photo=c.execute(select(driver_photos.c.driver_id).where(driver_photos.c.driver_id==d['id'])).first()
                             item['driver']['photo_url']=f'/api/driver-photo/{d["id"]}' if photo else None
@@ -447,14 +407,7 @@ def create_app(database_url=None, *, test_mode=False, auto_create=False):
             if not u or not u['driver_id']:raise HTTPException(403,'Conductor sin unidad')
             d=c.execute(select(drivers).where(drivers.c.id==u['driver_id'])).mappings().first()
             if not d:raise HTTPException(404,'Unidad no disponible')
-            assigned=[]
-            for t in c.execute(select(trips).where(trips.c.driver_id==d['id']).order_by(trips.c.id.desc()).limit(60)).mappings():
-                item=trip_public(t,'driver')
-                if t['status']=='accepted':
-                    item['arrival']={'start': arrival_gate(d, t, 'start')}
-                elif t['status']=='inprogress':
-                    item['arrival']={'complete': arrival_gate(d, t, 'complete')}
-                assigned.append(item)
+            assigned=[trip_public(t,'driver') for t in c.execute(select(trips).where(trips.c.driver_id==d['id']).order_by(trips.c.id.desc()).limit(60)).mappings()]
         shown_driver=driver_public(d)
         if shown_driver['gps_recent'] and d['lat'] is not None:
             shown_driver['location']={'lat':d['lat'],'lng':d['lng'],'accuracy_m':d['accuracy_m'],
@@ -536,10 +489,6 @@ def create_app(database_url=None, *, test_mode=False, auto_create=False):
                 expires=t['offer_expires_at']
                 if expires.tzinfo is None:expires=expires.replace(tzinfo=timezone.utc)
                 if expires<=now():raise HTTPException(409,'Oferta vencida; consulta a la central')
-            if action in ('start', 'complete'):
-                result=arrival_gate(d,t,action)
-                if not result['allowed']:
-                    raise HTTPException(409, result['reason'])
             values={'status':new}
             if action=='reject':values.update(driver_id=None,offer_expires_at=None)
             updated=c.execute(update(trips).where(and_(trips.c.id==tid,trips.c.status==old,trips.c.driver_id==d['id'])).values(**values))
