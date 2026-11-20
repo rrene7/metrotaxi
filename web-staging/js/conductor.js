@@ -5,8 +5,7 @@
  catch(e){M.notice(e.message,true);return;}
  const actions={offered:[['accept','Aceptar'],['reject','Rechazar']],accepted:[['start','Iniciar carrera']],inprogress:[['complete','Finalizar carrera']]};
  function mapCurrent(){
-  if(selected!==lastMapSelection){map.clearRoute();lastMapSelection=selected;}
-  const t=allTrips.find(x=>x.id===selected);if(!t){map.clearRoute();return;}
+  const t=allTrips.find(x=>x.id===selected);if(!t){map.clearRoute();lastMapSelection=null;return;}
   const changed=selected!==lastMapSelection;
   if(changed){map.clearRoute();lastMapSelection=selected;}
   const points=[];
