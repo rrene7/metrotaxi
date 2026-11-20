@@ -37,13 +37,13 @@ main{max-width:1180px;margin:22px auto 50px;padding:0 18px}h1{font-size:clamp(24
 <button type="button" data-role="conductor" aria-selected="false">🚕 Conductor</button></div>
 <div class="layout">
 <section class="card"><h2 id="role-title">Solicitud del pasajero</h2><p id="role-info">Solicita un taxi desde un punto marcado. La central recibirá la carrera.</p>
-<div class="stats" id="demo-stats"><div class="stat"><strong id="requests">0</strong><small>Solicitudes</small></div><div class="stat"><strong id="available">2</strong><small>Disponibles</small></div><div class="stat"><strong id="active">0</strong><small>En servicio</small></div></div>
+<div class="stats" id="demo-stats" hidden><div class="stat"><strong id="requests">0</strong><small>Solicitudes</small></div><div class="stat"><strong id="available">2</strong><small>Disponibles</small></div><div class="stat"><strong id="active">0</strong><small>En servicio</small></div></div>
 <div id="passenger-nav" hidden><button type="button" data-pass-tab="active" aria-selected="true">Carrera activa</button><button type="button" data-pass-tab="history" aria-selected="false">Historial</button></div>
 <div id="passenger-history" hidden><h2>Mis carreras anteriores</h2><div id="history-list">Aún no tienes carreras terminadas.</div></div>
 <div id="passenger-body"><div class="info" id="trip-status" role="status">No hay carreras activas.</div>
 <div id="driver-card" class="driver" hidden><div class="avatar" aria-label="Foto ficticia">🚕</div><div><strong>Conductor de prueba</strong><div>Unidad MT-01 · Placa DEMO-01</div><small>Perfil ilustrativo, no conductor real</small></div></div>
 <div class="actions" id="actions"></div></div>
-<div id="operations-panel"><h2>Registro interno de operaciones (central / conductor)</h2><ol class="timeline" id="timeline"><li>Selecciona «Solicitar taxi» para empezar la simulación.</li></ol>
+<div id="operations-panel" hidden><h2>Registro interno de operaciones (central / conductor)</h2><ol class="timeline" id="timeline"><li>Selecciona «Solicitar taxi» para empezar la simulación.</li></ol>
 <p class="muted">El historial interno corresponde exclusivamente a la central y al conductor.</p></div></section>
 <section class="card"><h2>🗺️ Pacora y 24 de Diciembre</h2><p id="map-note">Marcadores y trayectoria ficticios; la línea punteada NO es una ruta por calles.</p>
 <div id="map" aria-label="Mapa de demostración"></div><p id="tile-status" class="muted" role="status">Preparando mapa…</p>

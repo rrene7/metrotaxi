@@ -48,16 +48,16 @@ function render(){
  conductor:'Solo puedes aceptar carreras que Metro Taxi te ofrezca. La navegación abre Waze externamente.'};
  $$('role-title').textContent=title[role];$$('role-info').textContent=info[role];
  document.querySelectorAll('[data-role]').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.role===role)));
- $('passenger-nav').hidden=role!=='cliente';
- $('passenger-body').hidden=role==='cliente'&&passengerTab==='history';
- $('passenger-history').hidden=role!=='cliente'||passengerTab!=='history';
- $('operations-panel').hidden=role==='cliente';
- $('demo-stats').hidden=role==='cliente';
+ $$('passenger-nav').hidden=role!=='cliente';
+ $$('passenger-body').hidden=role==='cliente'&&passengerTab==='history';
+ $$('passenger-history').hidden=role!=='cliente'||passengerTab!=='history';
+ $$('operations-panel').hidden=role==='cliente';
+ $$('demo-stats').hidden=role==='cliente';
  document.querySelectorAll('[data-pass-tab]').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.passTab===passengerTab)));
- $('history-list').innerHTML='';
- if(!history.length)$('history-list').textContent='Aún no tienes carreras terminadas.';
- else history.forEach(s=>{const p=document.createElement('div');p.className='history-item';p.textContent=s;$('history-list').appendChild(p);});
- $('trip-status').textContent=(role==='cliente'?clientTexts[state]:texts[state])||texts.idle;
+ $$('history-list').innerHTML='';
+ if(!history.length)$$('history-list').textContent='Aún no tienes carreras terminadas.';
+ else history.forEach(s=>{const p=document.createElement('div');p.className='history-item';p.textContent=s;$$('history-list').appendChild(p);});
+ $$('trip-status').textContent=(role==='cliente'?clientTexts[state]:texts[state])||texts.idle;
  $$('requests').textContent=state==='idle'?0:1;$$('available').textContent=['offered','accepted','inprogress'].includes(state)?1:2;
  $$('active').textContent=['accepted','inprogress'].includes(state)?1:0;
  $$('driver-card').hidden=role!=='cliente'||!['accepted','inprogress','complete'].includes(state);
@@ -66,7 +66,7 @@ function render(){
  defs.forEach(([name,label])=>{
   const b=document.createElement('button');b.className='action'+(name==='move'?' secondary':'');b.textContent=label;b.type='button';
   if(name==='start'||name==='complete'){b.disabled=!atArrival(name);b.title=b.disabled?'Acércate a la recogida o destino para continuar':'';}
-  b.addEventListener('click',()=>{if(!b.disabled)act(name)});$('actions').appendChild(b);
+  b.addEventListener('click',()=>{if(!b.disabled)act(name)});$$('actions').appendChild(b);
  });
  if(!defs.length){const p=document.createElement('p');p.className='muted';p.textContent=role==='cliente'?'Aquí verás el estado de tu carrera. El despacho se gestiona por Metro Taxi.':state==='rejected'?'Reasigna la carrera desde la central.':'Cambia de rol para continuar la demostración.';$$('actions').appendChild(p);}
  const ol=$$('timeline');ol.innerHTML='';
