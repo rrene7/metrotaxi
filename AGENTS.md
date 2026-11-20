@@ -40,3 +40,11 @@ Resume el problema, causa, archivos tocados, pruebas ejecutadas y sus resultados
 - Distinguir HTTP 403 de Origin del 401 por contraseña incorrecta y del CSRF inválido en operaciones autenticadas.
 - Solo permitir loopback con puerto explícito cuando `test_mode=True`, nunca en la API de producción.
 - Ejecutar `python -m unittest tests_cloud.test_login_origin_v102 -v` antes de toda nueva entrega.
+
+
+## Puerta de seguridad para piloto Railway
+- Usar exclusivamente `cloud.pilot:app` con PostgreSQL (jamás `cloud.preview` o SQLite en Internet).
+- Mantener `METRO_ALLOWED_ORIGINS`, `METRO_ALLOWED_HOSTS` y `METRO_PILOT_PASSWORD` fuerte y privada.
+- El arranque inicial de esquema solo funciona sobre una BD completamente vacía con `METRO_BOOTSTRAP_EMPTY_DB=1`; luego debe cambiarse a 0. Nunca migrar bases activas automáticamente.
+- El mapa remoto necesita proveedor raster propio o habilitación explícita para piloto pequeño, sin prometer rutas viales comerciales.
+- Ejecutar `python -m unittest tests_cloud.test_railway_pilot tests_cloud.test_manage_pilot -v` y la prueba CI con PostgreSQL real. El piloto con clave no es producción comercial.
