@@ -1,6 +1,6 @@
 # METRO TAXI — RUTA DE TRABAJO OBLIGATORIA
 
-**Versión de desarrollo:** 0.10.2 (API cloud staging/PostgreSQL y web Netlify en desarrollo; APK sin compilar)  
+**Versión de desarrollo:** 0.10.3 (recuperación parcial de módulos en API cloud staging; APK sin compilar)  
 **Última revisión:** 20-11-2026  
 **Estado:** dos entornos separados (v0.9 piloto local íntegro y v0.10 cloud staging de alcance parcial); NO apto para pasajeros reales ni publicación comercial.
 
@@ -110,3 +110,12 @@ En Linux/macOS o CI, ejecutar **ambos** comandos: `python scripts/validar_entreg
 - `python -m unittest discover -s tests -v`: **49 aprobadas**.
 - Servidor Uvicorn real en puerto 8770: `POST /api/login` con `Origin: http://127.0.0.1:8770` devolvió 200, `/api/me` confirmó sesión y otro origen devolvió 403.
 - Pendiente en equipo de usuario: prueba manual Chrome/Edge y credenciales reales de su staging. Sin pruebas con PostgreSQL en línea ni Android físico.
+
+## GitHub y estado v0.10.3 — 20-11-2026
+
+- Repositorio de código: https://github.com/rrene7/metrotaxi (rama `main`).
+- Se subieron **97 archivos fuente** sin `runtime/`, `_runtime_staging/`, bases de datos ni secretos.
+- UI cloud de pruebas: mapa para recogida/destino, puntos de taxi con GPS reciente, recorrido visual/demostración, perfil de conductor, QR y estadísticas/mensajería en recuperación. **No se considera paridad total con la v0.9**.
+- Verificaciones locales antes de importar: `python scripts/validar_cloud.py` y `python scripts/validar_entrega.py --quick` aprobadas. Pruebas reales de mapa, PostgreSQL, Android y operación en carretera pendientes.
+- En la rama `main`, GitHub Actions ejecuta tests Python/JS y una compilación Android debug **sin distribuir APK**. Revisar los resultados antes de una nueva entrega.
+- El repositorio es **público**: prohibido subir credenciales, teléfonos/ubicaciones reales o los directorios de datos.
