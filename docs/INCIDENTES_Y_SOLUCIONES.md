@@ -176,3 +176,9 @@ El pasajero ya no recibe ofertas ni datos del conductor antes de la aceptación;
 - Corrección de usabilidad y observabilidad: control optativo «Mostrar contraseña» para verificar visualmente lo introducido, desactivar autocorrección/capitalización, preservar la contraseña sin transformaciones, evitar envíos simultáneos y forzar scripts actualizados mediante versión. Sin registrar ni mostrar credenciales en logs.
 - Prueba de regresión: `tests_cloud/test_local_login_visibility.py`; pruebas de API existentes siguen exigiendo validación de hash, sesión y CSRF.
 - Estado: pendiente comprobar manualmente el inicio de sesión en el Chrome del usuario tras actualizar Docker. Si continúa rechazando, inspeccionar exclusivamente estado HTTP y respuesta, nunca la contraseña ni Payload.
+
+## LOCAL-121 — Conflicto real de puertos en Windows (21-11-2026)
+
+- En la instalación del usuario, `Get-NetTCPConnection -LocalPort 8770 -State Listen` identificó un proceso Python de Windows (PID temporal 15488) que servía una página antigua aunque el contenedor Docker ya incluyera LOCAL-120. La contraseña en la API del Docker privado era correcta (`HTTP 200`); el navegador apuntaba al proceso Python anterior. Después de detener ese proceso, el contenedor mostró solo `8080/tcp`, sin publicación; recrear únicamente `app` desde Compose resolvió el acceso.
+- Prevención: ejecutar desde la raíz `powershell -ExecutionPolicy Bypass -File .\\scripts\\verificar_metro_local.ps1` antes de diagnosticar contraseñas. Comprueba proceso dueño del puerto, publicación real de Docker, health de la API y firma del formulario actualizado. Solo lectura; no detiene procesos ni muestra contraseñas.
+- Validación automatizada: `tests_cloud/test_local_windows_healthcheck.py`; confirmación práctica del usuario: administrador ingresó, pasajero y conductor pudieron ver MT-1 y reportó OK en prueba de geocerca. No equivale a prueba de producción ni a verificación GPS Android de campo.
