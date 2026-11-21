@@ -193,3 +193,11 @@ En Linux/macOS o CI, ejecutar **ambos** comandos: `python scripts/validar_entreg
 - `tests_cloud/test_netlify_static_publish.py` revisa rutas, headers de no-indexación y ausencia de backend o claves en el directorio público.
 - No existe aún URL Netlify verificada para Metro Taxi: el titular debe vincular **un proyecto nuevo** a `rrene7/metrotaxi`, rama `main`. No alterar `hidrolav507`.
 - Esto permite probar diseño y flujos ficticios; **no** entrega despacho multiusuario. API HTTPS, PostgreSQL persistente, dispositivos reales y autorización siguen pendientes.
+
+
+## NETLIFY-112 — Tolerancia a errores del mapa (21-11-2026)
+
+- Incidente potencial reproducible: Leaflet puede estar presente pero lanzar una excepción durante `L.map()` / `L.tileLayer()`; el arranque de la simulación se detenía antes de `render()`, impidiendo solicitar una carrera.
+- Corrección en `netlify-public/demo.js`: captura de error del mapa, texto de indisponibilidad y continuación de la interfaz con botones operativos. No modifica permisos, GPS real ni backend.
+- Regresión en `tests_cloud/test_netlify_public_demo.cjs`: simula excepción de inicialización del mapa y comprueba que pasajero y central pueden operar. Se actualiza el hash del script en `netlify-public/index.html` para evitar caché de la versión anterior.
+- Validación pendiente: ejecutar `node tests_cloud/test_netlify_public_demo.cjs`, validaciones Python y CI de GitHub; verificar manualmente el despliegue Netlify y los tres roles. No anunciar publicación hasta CI y merge.
