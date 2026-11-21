@@ -161,3 +161,11 @@ El pasajero ya no recibe ofertas ni datos del conductor antes de la aceptación;
 - **Reproducción:** primer job real de Docker falla al ejecutar `python -m cloud.manage --init-schema` antes de crear tablas. El import de `cloud.app` construía automáticamente una API adicional en modo producción porque ya existía `DATABASE_URL`; exigía `METRO_ALLOWED_ORIGINS` HTTPS incluso cuando el comando era solo inicialización de PostgreSQL local.
 - **Arreglo acotado:** `METRO_FACTORY_ONLY=1` solo en `compose.local.yaml` evita construir esa API implícita durante importaciones. `cloud.local_docker` continúa creando la app explícitamente mediante `create_app(..., test_mode=True, auto_create=False)` y exige PostgreSQL/schema. Producción y su validación de host/origen no se relajan.
 - **Control:** prueba estática `test_factory_only_prevents_cli_from_building_unrelated_public_app` y prueba real del bootstrap mediante `docker-local-smoke`; verificar nueva ejecución de CI.
+
+
+### Hallazgo CI LOCAL-119 — Docker levantó pero no respondió en loopback
+
+- **Reproducción:** el segundo arranque real inicializó PostgreSQL, creó cuenta ficticia y levantó `app`; el comprobador HTTP agotó el tiempo de espera de `/api/health`.
+- **Causa:** la única red de ambos contenedores era `internal: true`, que impedía el tráfico desde el host hasta el puerto publicado, aunque estuviera ligado a 127.0.0.1.
+- **Corrección:** mantener a `db` exclusivamente en `metro_private` interna y conectar la API también a `metro_loopback` de tipo bridge. Su única publicación de puerto permanece `127.0.0.1:8770:8080`; PostgreSQL no publica puertos.
+- **Control:** `test_local_docker_pilot.py` exige ambas redes y el trabajo real de CI valida acceso HTTP; no cambiar a `0.0.0.0` ni publicar 5432.
