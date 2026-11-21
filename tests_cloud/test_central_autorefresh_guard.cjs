@@ -15,7 +15,7 @@ function evaluate({pointEdit=null,focused=null,tripFields=[],driverFields=[]}={}
   trips:{contains:e=>e!=null&&e.area==='trips',querySelectorAll:()=>tripFields},
   drivers:{contains:e=>e!=null&&e.area==='drivers',querySelectorAll:()=>driverFields}
  };
- const sandbox={pointEdit,document:{activeElement:focused,getElementById:id=>nodes[id]}};
+ const sandbox={pointEdit,el:id=>nodes[id],document:{activeElement:focused,getElementById:id=>nodes[id]}};
  return vm.runInNewContext(match[0]+'\nhasPendingCentralEdits()',sandbox,{timeout:1000});
 }
 assert.equal(evaluate(),false,'Idle central must continue receiving automatic updates');
