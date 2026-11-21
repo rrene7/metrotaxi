@@ -1,5 +1,14 @@
 'use strict';
+const metroPanelCache=new WeakMap();
 window.MTCloud = {
+  // Avoid replacing buttons, focus and expanded elements on unchanged polls.
+  setHtml(id,html){
+    const node=document.getElementById(id);if(!node)return;
+    const p=metroPanelCache.get(node);
+    if(p&&p.html===html&&p.first===node.firstChild&&p.count===node.childNodes.length)return;
+    node.innerHTML=html;
+    metroPanelCache.set(node,{html,first:node.firstChild,count:node.childNodes.length});
+  },
   csrf: null,
   esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));},
   text(id,v){const e=document.getElementById(id);if(e)e.textContent=v;},

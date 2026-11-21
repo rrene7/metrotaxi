@@ -84,3 +84,14 @@ Estas casillas permanecen pendientes hasta disponer de pruebas reales en el equi
 - [ ] En el equipo Windows, revisar el puerto 8770, cuentas ficticias, sesión después de reiniciar y datos de prueba persistidos, sin eliminar volúmenes.
 
 No se marcan estas comprobaciones como ejecutadas en Windows solo porque CI pase.
+
+## LIVE-122 — Control de actualización automática por rol
+
+- [ ] Pasajero: observar carrera activa mientras central asigna y conductor acepta, sin recargar página; el historial permanece en su pestaña.
+- [ ] Central: mantener enfocado el selector de unidad o expediente mientras llegan consultas periódicas; no perder campos en edición.
+- [ ] Conductor: mantener visible una oferta durante sondeos sin parpadeos; probar Aceptar e Historial sin cambio automático de pestaña.
+- [ ] Recorrer estados `pending`, `offered`, `accepted`, `inprogress`, `done` con tres sesiones independientes y confirmar que los cambios llegan sin exponer teléfonos ni flota al pasajero o conductor.
+- [ ] Verificar controles GPS de inicio y finalización lejos/cerca del punto con ubicación real, nunca simulada; probar pérdida de señal.
+- [ ] Verificar que un error de API muestra Reintentar y que el panel se recupera cuando vuelve a responder.
+
+**Pendiente:** evaluación manual en Chrome y Android físicos; pruebas automatizadas no equivalen a uso comercial.
