@@ -234,3 +234,11 @@ En Linux/macOS o CI, ejecutar **ambos** comandos: `python scripts/validar_entreg
 - Corrección: pestañas «Carreras activas» e «Historial» en `web-staging/conductor.html`. Solo `offered/accepted/inprogress` y otros estados no cerrados permanecen en la lista operativa; `done/cancelled` aparecen en historial con estado, recorrido y tarifa registrada, sin botones de aceptar/iniciar/finalizar o acciones de mapa.
 - Seguimiento: una carrera cerrada se retira como selección de mapa; no se agrega acceso a viajes de otros conductores. La API, CSRF, restricciones de GPS y el piloto local no cambian.
 - Regresión: `tests_cloud/test_driver_history_tabs.cjs` verifica separación de estados, ausencia de acciones en historial y control de selección. Prueba manual pendiente en Chrome/Android con dos sesiones; CI obligatorio antes de fusionar.
+
+
+## DISPATCH-117 — prueba automatizada de tres sesiones independientes (21-11-2026)
+
+- Se incorporó `test_three_independent_sessions_full_dispatch_and_history` a `tests_cloud/test_cloud_flow.py`: pasajero, central y conductor utilizan cookies y CSRF propios, sin compartir sesión. Un cuarto cliente y un segundo conductor comprueban aislamiento.
+- El recorrido comprueba solicitud pendiente, oferta privada de central, aceptación, geocerca de recogida, estado en curso, geocerca de destino, finalización, historial privado del conductor y conductor de nuevo disponible.
+- La prueba usa base SQLite efímera en `test_mode=True`; no abre la API en Internet, no usa teléfonos ni ubicaciones reales y no toca `runtime/` ni `_runtime_staging/`. Complementa, pero NO reemplaza, la integración PostgreSQL temporal existente en CI y la verificación física de GPS en Android.
+- Antes de desplegar piloto HTTPS real: dominio y PostgreSQL privados, credenciales generadas fuera de GitHub, pruebas de cookies/CSRF en HTTPS, mapas autorizados y examen de seguridad. Registrar manual de aceptación sin marcar pasos no realizados.
