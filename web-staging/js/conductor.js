@@ -5,6 +5,21 @@
  catch(e){M.notice(e.message,true);return;}
  function canAct(t,act){return !['start','complete'].includes(act)||Boolean(t.arrival?.[act]?.allowed)}
  const actions={offered:[['accept','Aceptar'],['reject','Rechazar']],accepted:[['start','Iniciar carrera']],inprogress:[['complete','Finalizar carrera']]};
+ function partitionDriverTrips(trips){
+  return {active:trips.filter(t=>!['done','cancelled'].includes(t.status)),
+          history:trips.filter(t=>['done','cancelled'].includes(t.status))};
+ }
+ function selectDriverTab(tab){
+  const isHistory=tab==='history';
+  el('driver-active-pane').hidden=isHistory;
+  el('driver-history-pane').hidden=!isHistory;
+  document.querySelectorAll('[data-driver-tab]').forEach(b=>{
+   const selected=b.dataset.driverTab===tab;
+   b.setAttribute('aria-selected',String(selected));
+   b.classList.toggle('primary',selected);
+  });
+ }
+ document.querySelectorAll('[data-driver-tab]').forEach(b=>b.addEventListener('click',()=>selectDriverTab(b.dataset.driverTab)));
  function mapCurrent(){
   const t=allTrips.find(x=>x.id===selected);if(!t){map.clearRoute();lastMapSelection=null;return;}
   const changed=selected!==lastMapSelection;
@@ -23,14 +38,19 @@
  async function load(){if(busy)return;busy=true;
   try{const data=await M.api('/api/mine'),d=data.driver;currentDriver=d;allTrips=data.trips;
    el('unit').innerHTML=`<strong>${M.esc(d.unit)} · ${M.esc(d.name)}</strong><p>${M.esc(d.station)} · ${M.esc(d.status)}</p><p>${M.esc(d.vehicle_make||'Vehículo pendiente')} ${M.esc(d.vehicle_model||'')} · ${M.esc(d.plate||'Placa pendiente')}</p><p class="muted">GPS: ${d.gps_recent?M.esc(d.last_location_at):'Sin posición reciente'}</p>`;
-   el('trips').innerHTML=data.trips.length?data.trips.map(t=>{
+   const grouped=partitionDriverTrips(data.trips);
+   el('trips').innerHTML=grouped.active.length?grouped.active.map(t=>{
     const pick=t.status==='accepted'?M.link(t.pickup_lat,t.pickup_lng):null;
     const dest=t.status==='inprogress'?M.link(t.dest_lat,t.dest_lng):null;
     const n=pick||dest,lbl=pick?'Recogida':'Destino';
     return `<article class="item"><div class="row between"><b>#MT-${t.id}</b><span class="status">${M.status(t.status)}</span></div><p><b>Pasajero:</b> ${M.esc(t.name)} · <b>Recogida:</b> ${M.esc(t.pickup)}</p><p><b>Destino:</b> ${M.esc(t.destination||'Por confirmar')}</p><p>Referencia: ${M.esc(t.reference||'—')}</p>${(t.status==='accepted'||t.status==='inprogress')?`<p class="muted">${M.esc(t.arrival?.[t.status==='accepted'?'start':'complete']?.reason||'Se requiere GPS reciente para continuar')}</p>`:''}${n?`<div class="actions"><a target="_blank" rel="noopener noreferrer" href="${n.waze}">Waze a ${lbl}</a><a target="_blank" rel="noopener noreferrer" href="${n.maps}">Google Maps</a></div>`:['accepted','inprogress'].includes(t.status)?'<p class="muted">Sin coordenadas para Waze; confirma con la central.</p>':''}<div class="actions"><button class="button" data-view="${t.id}">Ver puntos y recorrido</button>${(actions[t.status]||[]).map(([a,label])=>`<button class="button ${a==='reject'?'':'primary'}" data-action="${a}" data-trip="${t.id}" ${canAct(t,a)?"":"disabled"}>${label}</button>`).join('')}</div></article>`;
    }).join(''):'<p class="muted">No tienes carreras asignadas.</p>';
-   if(selected&&!allTrips.some(t=>t.id===selected))selected=null;
-   if(!selected){const t=allTrips.find(x=>['accepted','inprogress'].includes(x.status));if(t)selected=t.id}
+
+   el('driver-trip-history').innerHTML=grouped.history.length?grouped.history.map(t=>
+    `<article class="item"><div class="row between"><b>#MT-${t.id}</b><span class="status">${M.status(t.status)}</span></div><p><b>Recogida:</b> ${M.esc(t.pickup)}</p><p><b>Destino:</b> ${M.esc(t.destination||'No registrado')}</p><p><b>Tarifa registrada:</b> ${t.price==null?'No registrada':'USD '+Number(t.price).toFixed(2)}</p></article>`
+   ).join(''):'<p class="muted">Aún no tienes carreras anteriores.</p>';
+   if(selected&&!grouped.active.some(t=>t.id===selected))selected=null;
+   if(!selected){const t=grouped.active.find(x=>['accepted','inprogress'].includes(x.status));if(t)selected=t.id}
    if(selected)mapCurrent();else{map.clearRoute();map.update([]);lastMapSelection=null;}
   }catch(e){el('trips').innerHTML=`<div class="error">No se cargaron carreras: ${M.esc(e.message)} <button class="button" data-retry="1">Reintentar</button></div>`;M.notice(e.message,true)}finally{busy=false;}}
  el('trips').addEventListener('click',async e=>{
