@@ -40,15 +40,18 @@ def http(opener, path, method="GET", body=None, headers=None):
         return exc.code, exc.read(), dict(exc.headers)
 
 
-def until_ready(opener):
-    for _ in range(40):
+def until_ready(opener, compose):
+    for _ in range(30):
         try:
             status, body, _ = http(opener, "/api/health")
             if status == 200 and json.loads(body).get("database") == "ready":
                 return
-        except (URLError, TimeoutError, ValueError):
+        except (OSError, URLError, ValueError):
             pass
-        time.sleep(2)
+        time.sleep(1)
+    print("DIAGNOSTICO: proceso API y logs del contenedor (sin variables de entorno).", flush=True)
+    run(compose, "ps", "app")
+    run(compose, "logs", "--tail=65", "app")
     raise AssertionError("Contenedor Metro Taxi no informó PostgreSQL disponible")
 
 
@@ -73,7 +76,7 @@ def main():
                       "create_staff(e,'ci_smoke_admin','ci-only-admin-password-123456'); e.dispose()")
             run(compose, "run", "--rm", "-T", "app", "python", "-c", script)
             run(compose, "up", "-d", "app")
-            until_ready(opener)
+            until_ready(opener, compose)
 
             status, page, _ = http(opener, "/ingresar.html")
             assert status == 200 and b"<html" in page.lower(), "Login web unavailable"
@@ -95,7 +98,7 @@ def main():
             run(compose, "stop", "app", "db")
             run(compose, "start", "db")
             run(compose, "start", "app")
-            until_ready(opener)
+            until_ready(opener, compose)
             status, body, _ = http(opener, "/api/me")
             assert status == 200 and json.loads(body).get("authenticated") is True, (
                 "Existing account/session disappeared after container restart")
