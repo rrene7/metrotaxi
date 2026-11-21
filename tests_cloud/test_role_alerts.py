@@ -5,7 +5,6 @@ ROOT=Path(__file__).resolve().parents[1]
 class AlertsTests(unittest.TestCase):
  def test_notifications_are_local_and_role_scoped(self):
   alerts=(ROOT/'web-staging/js/avisos.js').read_text(encoding='utf-8')
-  self.assertIn('last===null',alerts.replace('last!==null','last===null')) if False else None
   self.assertIn('if(last!==null)',alerts)
   self.assertIn("Notification.permission==='granted'",alerts)
   self.assertIn("button.addEventListener('click',enable)",alerts)
