@@ -54,6 +54,7 @@ const sandbox={
  MetroMap:{good:(a,b)=>typeof a==='number'&&typeof b==='number'&&isFinite(a)&&isFinite(b),make:options=>{
     Object.assign(pointOptions,options);return map;
  }},
+ MTAlerts:{make:()=>({observe(){},isEnabled:()=>false})},
  MTCloud:M,setInterval:()=>0,confirm:()=>true,console
 };
 vm.runInNewContext(src,sandbox,{filename:'central.js',timeout:4000});
