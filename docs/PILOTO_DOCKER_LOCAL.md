@@ -64,3 +64,10 @@ docker compose --env-file metro-local.env -f compose.local.yaml start
 - El prototipo v0.9 y su directorio `runtime/` permanecen intactos.
 
 **Estado:** archivos preparados en GitHub; no se ha ejecutado Docker Desktop en la PC del propietario ni confirmado una sesión visual. Ver `docs/PRUEBAS_DE_ACEPTACION.md` para las comprobaciones pendientes.
+
+
+## Validación automatizada de contenedores — LOCAL-119
+
+GitHub Actions ejecuta ahora, además de las pruebas Python/JS, un trabajo `docker-local-smoke` con contenedores reales **en un runner descartable**. Crea PostgreSQL vacío y credenciales ficticias, comprueba login, seguridad de Origin/Host y que la sesión persista tras detener y arrancar contenedores. No elimina volúmenes. El trabajo solo corre tras aprobar el bloque de pruebas existente.
+
+**La prueba de GitHub no equivale a Docker Desktop Windows:** sigue siendo obligatorio verificar el arranque y el historial en tu equipo antes de utilizar el piloto. La base y contraseñas del runner son independientes de la PC del propietario.
