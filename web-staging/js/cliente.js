@@ -1,5 +1,5 @@
 'use strict';(async()=>{
- const M=MTCloud, el=id=>document.getElementById(id);let coords=null,destCoords=null,logged=false,lastTrips=[],selected=null,lastMapSelection=null,trackingActive=false,roadView=false;
+ const M=MTCloud, el=id=>document.getElementById(id);let coords=null,destCoords=null,logged=false,lastTrips=[],selected=null,lastMapSelection=null,trackingActive=false,roadView=false,requestGeneration=0;
  const token=new URLSearchParams(location.search).get('referido')||'';
 
  const passengerStatuses={pending:'Buscando taxi',offered:'Buscando taxi',accepted:'Taxi confirmado',inprogress:'En viaje',done:'Finalizada',cancelled:'Cancelada'};
@@ -43,7 +43,10 @@
   if(trackingActive){map.clearRoute();el('tracking-info').textContent='Selecciona una carrera activa para iniciar el seguimiento.';}
  }
  async function render(){try{const s=await M.me();logged=s.authenticated&&s.user.role==='customer';el('auth').classList.toggle('hidden',logged);el('account').classList.toggle('hidden',!logged);if(logged){selectTab('customer-active');await load();}else if(s.authenticated)M.notice('Una sesión de personal está abierta. Usa una ventana privada para la cuenta del pasajero.',true)}catch(e){M.notice(e.message,true)}}
- async function load(){if(!logged)return;try{const [data,ms]=await Promise.all([M.api('/api/customer/trips'),M.api('/api/messages')]);lastTrips=data.trips;el('account-label').textContent=data.account.name+' · '+data.account.phone+' · '+(data.account.phone_verified?'Teléfono verificado':'Teléfono no verificado');
+ function isCurrentCustomerResponse(generation){return generation===requestGeneration;}
+ async function load(){if(!logged)return;const generation=++requestGeneration;try{const [data,ms]=await Promise.all([M.api('/api/customer/trips'),M.api('/api/messages')]);
+  if(!isCurrentCustomerResponse(generation))return;
+  lastTrips=data.trips;el('account-label').textContent=data.account.name+' · '+data.account.phone+' · '+(data.account.phone_verified?'Teléfono verificado':'Teléfono no verificado');
   const active=data.trips.filter(t=>!['done','cancelled'].includes(t.status));
   const history=data.trips.filter(t=>['done','cancelled'].includes(t.status));
   if(!active.some(t=>t.id===selected)){selected=active[0]?.id||null;trackingActive=Boolean(selected);roadView=false;}
@@ -58,7 +61,7 @@
   el('trip-history').innerHTML=history.length?history.map(t=>`<article class="item"><div class="row between"><strong>#MT-${t.id}</strong><span class="status">${passengerStatuses[t.status]||'Finalizada'}</span></div><p>Recogida: ${M.esc(t.pickup)}</p><p>Destino: ${M.esc(t.destination||'No registrado')}</p></article>`).join(''):'<p class="muted">Aún no tienes carreras anteriores.</p>';
   el('messages').innerHTML=ms.messages.length?ms.messages.slice().reverse().map(m=>`<article class="item"><b>${m.sender==='customer'?'Tú':'Central Metro Taxi'}</b><p>${M.esc(m.body)}</p></article>`).join(''):'<p>Sin mensajes.</p>';
   showSelected();
- }catch(e){el('trips').innerHTML=`<div class="error">${M.esc(e.message)} <button class="button" data-retry="1">Reintentar</button></div>`}}
+ }catch(e){if(isCurrentCustomerResponse(generation))el('trips').innerHTML=`<div class="error">${M.esc(e.message)} <button class="button" data-retry="1">Reintentar</button></div>`}}
  for(const [form,endpoint,fn] of [
   ['register','/api/customer/register',()=>({name:el('r-name').value,phone:el('r-phone').value,password:el('r-password').value,consent:el('r-consent').checked,referral_token:token})],
   ['login','/api/customer/login',()=>({phone:el('l-phone').value,password:el('l-password').value})]
@@ -66,7 +69,7 @@
  el('gps').addEventListener('click',()=>{if(!navigator.geolocation)return M.notice('GPS no disponible; indica referencia manual',true);M.text('gps-info','Solicitando autorización GPS...');navigator.geolocation.getCurrentPosition(pos=>{coords={pickup_lat:pos.coords.latitude,pickup_lng:pos.coords.longitude,pickup_accuracy_m:pos.coords.accuracy};el('gps-info').textContent=`GPS autorizado · precisión ±${Math.round(pos.coords.accuracy)} m. Verifica la entrada.`;if(!el('pickup').value)el('pickup').value='Mi ubicación actual';showSelected();},err=>{coords=null;M.text('gps-info','GPS no disponible: '+err.message+'. Marca el mapa o usa referencia.')},{enableHighAccuracy:true,timeout:20000,maximumAge:0});});
  el('pick-pickup').addEventListener('click',()=>map.pick('pickup'));
  el('pick-destination').addEventListener('click',()=>map.pick('destination'));
- el('request').addEventListener('submit',async e=>{e.preventDefault();try{const b={station:el('station').value,pickup:el('pickup').value,destination:el('dest').value,reference:el('reference').value,consent:el('trip-consent').checked,...(coords||{}),...(destCoords||{})};const r=await M.api('/api/requests','POST',b);M.notice('Carrera #MT-'+r.id+' enviada a la central');selected=r.id;trackingActive=true;roadView=false;coords=null;destCoords=null;el('request').reset();M.text('gps-info','Sin coordenadas nuevas.');await load()}catch(err){M.notice(err.message,true)}});
+ el('request').addEventListener('submit',async e=>{e.preventDefault();try{const b={station:el('station').value,pickup:el('pickup').value,destination:el('dest').value,reference:el('reference').value,consent:el('trip-consent').checked,...(coords||{}),...(destCoords||{})};++requestGeneration;const r=await M.api('/api/requests','POST',b);M.notice('Carrera #MT-'+r.id+' enviada a la central');selected=r.id;trackingActive=true;roadView=false;coords=null;destCoords=null;el('request').reset();M.text('gps-info','Sin coordenadas nuevas.');await load()}catch(err){M.notice(err.message,true)}});
  async function showRoute(tid,byRoad=false){
   selected=tid;trackingActive=true;showSelected();
   const t=lastTrips.find(x=>x.id===tid),seg=MetroTracking.segment(t,MetroMap.good);
@@ -77,10 +80,10 @@
  el('trips').addEventListener('click',async e=>{
   if(e.target.closest('[data-retry]'))return load();const a=e.target.closest('[data-map]'),c=e.target.closest('[data-cancel]');
   if(a){selectTab('customer-active');await showRoute(Number(a.dataset.map));el('route-by-road').classList.remove('hidden');return;}
-  if(c)try{await M.api('/api/trips/cancel','POST',{trip_id:Number(c.dataset.cancel)});await load();M.notice('Solicitud cancelada')}catch(err){M.notice(err.message,true)}
+  if(c)try{++requestGeneration;await M.api('/api/trips/cancel','POST',{trip_id:Number(c.dataset.cancel)});await load();M.notice('Solicitud cancelada')}catch(err){M.notice(err.message,true)}
  });
  el('route-by-road').addEventListener('click',()=>{if(selected)showRoute(selected,true)});
  el('message-form').addEventListener('submit',async e=>{e.preventDefault();try{await M.api('/api/messages','POST',{body:el('message-body').value});el('message-body').value='';M.notice('Mensaje enviado a la central');await load()}catch(err){M.notice(err.message,true)}});
- el('refresh').addEventListener('click',load);el('logout').addEventListener('click',async()=>{try{await M.logout()}catch(e){M.notice(e.message,true)}});
+ el('refresh').addEventListener('click',load);el('logout').addEventListener('click',async()=>{++requestGeneration;try{await M.logout()}catch(e){M.notice(e.message,true)}});
  await verifyReferral();await render();setInterval(()=>{if(logged && !document.hidden)load()},10000);
 })();
