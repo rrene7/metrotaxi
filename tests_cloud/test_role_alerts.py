@@ -13,7 +13,7 @@ class AlertsTests(unittest.TestCase):
    html=(ROOT/f'web-staging/{role}.html').read_text(encoding='utf-8')
    js=(ROOT/f'web-staging/js/{role}.js').read_text(encoding='utf-8')
    self.assertIn('/js/avisos.js?v=alerts-123',html)
-   self.assertIn(f'/js/{role}.js?v=alerts-123',html)
+   self.assertIn(f'/js/{role}.js?v=session-124',html)
    self.assertIn('id="new-trip-alert"',html)
    self.assertIn('id="enable-alerts"',html)
    self.assertIn(condition,js)
