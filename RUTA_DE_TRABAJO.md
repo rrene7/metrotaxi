@@ -210,3 +210,11 @@ En Linux/macOS o CI, ejecutar **ambos** comandos: `python scripts/validar_entreg
 - Botones manuales `Actualizar` siguen disponibles; podrían descartar cambios no guardados por ser una acción explícita. Guardar y cancelar reanudan el flujo normal si no quedan ediciones pendientes.
 - Test: `tests_cloud/test_central_autorefresh_guard.cjs` verifica estados de edición y refresco inactivo. Ejecutar `python scripts/validar_cloud.py` y demás CI; prueba visual en Windows/Chrome pendiente.
 - No se modifican API, roles, CSRF, GPS, flota real ni `runtime/`.
+
+
+## CUSTOMER-114 — respuestas atrasadas en seguimiento del pasajero (21-11-2026)
+
+- Riesgo: `web-staging/js/cliente.js` consulta carreras y mensajes cada 10 segundos sin ordenar respuestas; una respuesta anterior podía pintar estados anteriores después de una solicitud nueva, cancelación o refresco posterior.
+- Corrección: cada consulta recibe una generación monotónica. Solo la generación más reciente puede modificar la UI o mostrar su error. Solicitar, cancelar y cerrar sesión invalidan consultas en vuelo antes de modificar datos.
+- Prueba automática nueva: `tests_cloud/test_customer_polling_race.cjs`, incluida en `scripts/validar_cloud.py`. Requiere aprobación del workflow antes de fusionar. Las solicitudes siguen pasando por la API con cookies, sesión y CSRF.
+- Alcance: únicamente cliente web staging; no afecta Netlify público, servicio remoto, flota, `runtime/` ni esquema DB. Prueba móvil con cambios concurrentes sigue pendiente.

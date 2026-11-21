@@ -111,3 +111,11 @@ El pasajero ya no recibe ofertas ni datos del conductor antes de la aceptación;
 - **Causa:** reconstrucción periódica de `#trips` y `#drivers` mediante `innerHTML` mientras el operador escribía una tarifa, elegía una unidad o editaba un vehículo.
 - **Corrección:** diferenciar refresco programado de manual y omitir el automático con editor abierto, foco activo o formulario sin guardar. Revisar de nuevo el bloqueo después de la respuesta de la API para evitar una condición de carrera.
 - **Control:** `tests_cloud/test_central_autorefresh_guard.cjs` ejecutado por `scripts/validar_cloud.py`; verificar visualmente selección, edición y guardado en 2 navegadores. No sustituye pruebas en el navegador.
+
+
+## CUSTOMER-114 — actualización atrasada en pantalla del pasajero (21-11-2026)
+
+- **Síntoma posible:** al coincidir sondeo automático con solicitud/cancelación, la respuesta vieja podría reemplazar el estado nuevo o mostrar un error ya superado.
+- **Causa:** cargas asíncronas de carreras/mensajes en paralelo, sin protección contra respuestas fuera de orden.
+- **Solución:** generación incremental por consulta, invalidación antes de mutaciones y descarte de éxitos/errores de generaciones antiguas.
+- **Regresión:** `tests_cloud/test_customer_polling_race.cjs` verifica la guardia y los puntos de invalidación. Revisión manual en dos navegadores y retraso de red pendiente.
