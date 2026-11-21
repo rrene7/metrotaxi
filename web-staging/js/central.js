@@ -5,6 +5,7 @@
    return [...baseMarkers,{lat:pointEdit.preview.lat,lng:pointEdit.preview.lng,
       kind:pointEdit.point==='pickup'?'pickup':'destination',name:'Vista previa, pendiente de confirmar'}];
  }
+ const alerts=MTAlerts.make({kind:'central',element:el('new-trip-alert'),button:el('enable-alerts'),selector:t=>t.status==='pending' });
  const map=MetroMap.make({id:'map-central',onChoose:(point,lat,lng)=>{
    if(!pointEdit||pointEdit.point!==point)return;
    pointEdit.preview={lat,lng};pointEdit.method='map_click';
@@ -51,6 +52,7 @@
   try{const [tr,dr,st,ms]=await Promise.all([M.api('/api/trips'),M.api('/api/fleet'),M.api('/api/stats'),M.api('/api/messages')]);
    if(automatic&&hasPendingCentralEdits())return; // Edits may start while API requests are pending.
    rides=tr.trips;units=dr.drivers;messageInbox=ms.messages;
+    alerts.observe(rides);
    M.text('pending-count',rides.filter(t=>t.status==='pending').length);
    M.text('offered-count',rides.filter(t=>t.status==='offered').length);
    M.text('active-count',rides.filter(t=>['accepted','inprogress'].includes(t.status)).length);
