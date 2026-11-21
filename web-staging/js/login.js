@@ -8,7 +8,10 @@
  // Never log, store, strip or transform the password. Make accidental
  // browser autocomplete / keyboard differences visible on demand.
  reveal.addEventListener('change',()=>{password.type=reveal.checked?'text':'password';});
- try{const s=await M.me();if(s.authenticated){location.replace(s.user.role==='driver'?'/conductor.html':'/central.html');return;}}catch(e){M.notice(e.message,true)}
+ try{const s=await M.me();if(s.authenticated){
+  if(s.user.role==='customer')M.notice('Hay una sesión de pasajero activa en este navegador. Para entrar como personal, inicia sesión aquí; para usar ambos roles a la vez, utiliza perfiles de Chrome separados.',true);
+  else {location.replace(s.user.role==='driver'?'/conductor.html':'/central.html');return;}
+ }}catch(e){M.notice(e.message,true)}
  form.addEventListener('submit',async e=>{
   e.preventDefault();
   if(button.disabled)return;
