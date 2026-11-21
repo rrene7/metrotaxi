@@ -115,5 +115,5 @@
  el('gps-stop').addEventListener('click',stopGPS);
  async function loadQR(){try{const r=await M.api('/api/driver/referral');const a=document.createElement('a');a.href=r.url||'#';a.textContent=r.url?new URL(r.url,location.origin).href:'QR revocado';a.target='_blank';a.rel='noopener noreferrer';el('qr-box').innerHTML=`${r.qr_url?'<img src="'+M.esc(r.qr_url)+'" alt="Código QR de afiliación" style="width:180px;max-width:100%"><br>':''}<span class="tag">Clientes registrados por mi QR: ${r.count}</span><p class="tiny">En local 127.0.0.1 el QR NO sirve desde otro teléfono; publicar HTTPS antes de compartir.</p>`;el('qr-box').appendChild(a)}catch(e){el('qr-box').textContent='QR no disponible: '+e.message}}
  el('refresh').addEventListener('click',load);el('logout').addEventListener('click',async()=>{await stopGPS();try{await M.logout()}catch(e){M.notice(e.message,true)}});
- await load();await loadQR();setInterval(()=>{if(!document.hidden)load()},9000);
+ await load();await loadQR();setInterval(()=>{if(!document.hidden||alerts.isEnabled())load()},9000);
 })();
