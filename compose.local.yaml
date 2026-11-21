@@ -31,9 +31,11 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    networks: [metro_private]
+    networks: [metro_private, metro_loopback]
 volumes:
   metro_local_pgdata:
 networks:
   metro_private:
     internal: true
+  metro_loopback:
+    driver: bridge
