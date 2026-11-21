@@ -96,3 +96,11 @@ El pasajero ya no recibe ofertas ni datos del conductor antes de la aceptación;
 **Problema evitado:** una conexión directa del repositorio a Netlify puede publicar `web-staging/` con botones que envían llamadas `/api/*` sin un backend HTTPS real, provocando inicio de sesión y solicitudes fallidas. Publicar el piloto local por error expondría datos y sesiones.
 
 **Solución:** un `netlify.toml` con carpeta pública específica `netlify-public/` que contiene únicamente la demostración ficticia conocida de GitHub Pages, más tests que rechazan pérdida de privacidad, caché inconsistente, configuraciones de pago y presencia de componentes privados. La actualización real del backend se hará en una fase independiente con HTTPS y pruebas de autorización/CSRF.
+
+
+### NETLIFY-112 — Mapa que impide iniciar la demostración (21-11-2026)
+
+- **Riesgo:** una excepción lanzada por Leaflet al crear el mapa interrumpe la inicialización y bloquea botones, incluso cuando el despacho ficticio no depende del mapa.
+- **Solución:** manejar el fallo durante `initMap()`, avisar que el mapa no está disponible y continuar con `render()`.
+- **Prevención:** prueba Node que fuerza el fallo y verifica que solicitar/asignar conserva funcionalidad; revisión del hash del JS para despliegue sin caché incompatible.
+- **Pendiente:** ejecución de CI y recorrido visual en la URL pública; no equivale a validación de mapa/GPS real.
