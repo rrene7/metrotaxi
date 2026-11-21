@@ -788,7 +788,11 @@ def create_app(database_url=None, *, test_mode=False, auto_create=False):
 
 
 # Fail fast if configuration is missing. Tests call create_app with temporary SQLite.
-if os.environ.get('DATABASE_URL'):
+if os.environ.get('DATABASE_URL') and os.environ.get('METRO_FACTORY_ONLY') != '1':
     app = create_app()
 else:
+    # The loopback Docker entrypoint and management CLI import create_app but
+    # configure their own isolated application. Never construct an unrelated
+    # production app during those imports; no security check is bypassed in
+    # create_app itself.
     app = None
