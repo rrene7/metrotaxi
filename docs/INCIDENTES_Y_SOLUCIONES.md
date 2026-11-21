@@ -133,3 +133,10 @@ El pasajero ya no recibe ofertas ni datos del conductor antes de la aceptación;
 - **Causa:** el frontend representaba todas las carreras devueltas por `/api/mine` en una misma lista y dejaba seleccionada una carrera finalizada.
 - **Solución:** paneles independientes, filtro de estados `done/cancelled` hacia historial, listado operativo de servicios activos con sus controles existentes, y limpieza de selección de mapa al cerrar la carrera.
 - **Prueba:** `tests_cloud/test_driver_history_tabs.cjs` y validación visual pendiente en navegador y Android físico. No requiere migración ni modifica la API.
+
+
+## DISPATCH-117 — barrera de regresión integral para carreras entre tres roles (21-11-2026)
+
+- **Riesgo controlado:** mejoras independientes a cliente, central y conductor pueden romper el ciclo real o filtrar ofertas/identidad de conductor antes de aceptar.
+- **Prueba:** `tests_cloud/test_cloud_flow.py::CloudFlowTests.test_three_independent_sessions_full_dispatch_and_history`: verifica cookies/CSRF distintos, privacidad, asignación central, GPS lejano (bloqueo 409), GPS cercano (inicio y final correctos), historial privado y conductor liberado.
+- **Límite:** ejecución HTTP simulada con datos ficticios y SQLite aislada; además exigir PostgreSQL efímero de CI, revisión visual multiusuario y ensayo Android físico antes de operar. No afirmar validación GPS antifraude.
