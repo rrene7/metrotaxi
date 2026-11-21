@@ -52,3 +52,16 @@ scripts\validar_entrega.bat
 - [ ] Confirmar que el cambio de punto no expone teléfonos ni posiciones de otros clientes al conductor; probar en Chrome y Android antes de operar en calle.
 
 **Estado:** automatización CI pendiente de corroborar en PR; inspección manual en navegadores/teléfonos pendiente.
+
+
+## DISPATCH-117 — ensayo real pendiente, tres sesiones
+
+- [ ] Abrir perfiles/navegadores separados para pasajero, operador central y conductor. Verificar sesiones y CSRF separados.
+- [ ] Pasajero solicita una carrera ficticia; central la ve y asigna una unidad disponible. El pasajero NO ve ofertas internas ni flota.
+- [ ] Conductor recibe únicamente su oferta; al aceptarla el pasajero ve la unidad confirmada.
+- [ ] Sin GPS preciso y cercano, intentar inicio/final desde navegador y API: ambos deben bloquearse. Nunca inventar GPS de dispositivo.
+- [ ] Probar recorrido con GPS físico cerca de recogida/destino, actualización en central y cliente, navegación Waze y recuperación desde segundo plano.
+- [ ] Verificar historial en pestaña independiente de conductor y cliente, sin acciones en viajes cerrados ni datos de otros usuarios.
+- [ ] Probar pérdida de Internet, GPS detenido y reconexión; no utilizar clientes reales en esta etapa.
+
+**La prueba automatizada DISPATCH-117 no marca estas casillas:** requieren navegadores y teléfonos reales.
