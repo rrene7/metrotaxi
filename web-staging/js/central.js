@@ -33,7 +33,10 @@
    el('point-editor').scrollIntoView?.({behavior:'smooth',block:'center'});
  }
 
- try{const s=await M.me();if(!s.authenticated||!['admin','operator'].includes(s.user.role)){location.replace('/ingresar.html');return;}}
+ try{const s=await M.me();if(!s.authenticated){location.replace('/ingresar.html');return;}
+  if(!['admin','operator'].includes(s.user.role)){
+   location.replace(s.user.role==='driver'?'/conductor.html':'/cliente.html');return;
+  }}
  catch(e){M.notice(e.message,true);return;}
  function hasPendingCentralEdits(){
   if(pointEdit)return true;
