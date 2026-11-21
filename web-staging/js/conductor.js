@@ -40,11 +40,11 @@
    M.setHtml('unit',`<strong>${M.esc(d.unit)} · ${M.esc(d.name)}</strong><p>${M.esc(d.station)} · ${M.esc(d.status)}</p><p>${M.esc(d.vehicle_make||'Vehículo pendiente')} ${M.esc(d.vehicle_model||'')} · ${M.esc(d.plate||'Placa pendiente')}</p><p class="muted">GPS: ${d.gps_recent?M.esc(d.last_location_at):'Sin posición reciente'}</p>`);
    const grouped=partitionDriverTrips(data.trips);
    M.setHtml('trips',grouped.active.length?grouped.active.map(t=>{
-    const pick=t.status==='accepted'?M.link(t.pickup_lat,t.pickup_lng):null);
+    const pick=t.status==='accepted'?M.link(t.pickup_lat,t.pickup_lng):null;
     const dest=t.status==='inprogress'?M.link(t.dest_lat,t.dest_lng):null;
     const n=pick||dest,lbl=pick?'Recogida':'Destino';
     return `<article class="item"><div class="row between"><b>#MT-${t.id}</b><span class="status">${M.status(t.status)}</span></div><p><b>Pasajero:</b> ${M.esc(t.name)} · <b>Recogida:</b> ${M.esc(t.pickup)}</p><p><b>Destino:</b> ${M.esc(t.destination||'Por confirmar')}</p><p>Referencia: ${M.esc(t.reference||'—')}</p>${(t.status==='accepted'||t.status==='inprogress')?`<p class="muted">${M.esc(t.arrival?.[t.status==='accepted'?'start':'complete']?.reason||'Se requiere GPS reciente para continuar')}</p>`:''}${n?`<div class="actions"><a target="_blank" rel="noopener noreferrer" href="${n.waze}">Waze a ${lbl}</a><a target="_blank" rel="noopener noreferrer" href="${n.maps}">Google Maps</a></div>`:['accepted','inprogress'].includes(t.status)?'<p class="muted">Sin coordenadas para Waze; confirma con la central.</p>':''}<div class="actions"><button class="button" data-view="${t.id}">Ver puntos y recorrido</button>${(actions[t.status]||[]).map(([a,label])=>`<button class="button ${a==='reject'?'':'primary'}" data-action="${a}" data-trip="${t.id}" ${canAct(t,a)?"":"disabled"}>${label}</button>`).join('')}</div></article>`;
-   }).join(''):'<p class="muted">No tienes carreras asignadas.</p>';
+   }).join(''):'<p class="muted">No tienes carreras asignadas.</p>');
 
    M.setHtml('driver-trip-history',grouped.history.length?grouped.history.map(t=>
     `<article class="item"><div class="row between"><b>#MT-${t.id}</b><span class="status">${M.status(t.status)}</span></div><p><b>Recogida:</b> ${M.esc(t.pickup)}</p><p><b>Destino:</b> ${M.esc(t.destination||'No registrado')}</p><p><b>Tarifa registrada:</b> ${t.price==null?'No registrada':'USD '+Number(t.price).toFixed(2)}</p></article>`
