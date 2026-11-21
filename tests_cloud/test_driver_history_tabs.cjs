@@ -22,8 +22,8 @@ const sample=[{id:1,status:'offered'},{id:2,status:'accepted'},{id:3,status:'inp
 const result=sandbox.partitionDriverTrips(sample);
 assert.deepEqual(Array.from(result.active,x=>x.id),[1,2,3],'Only active trips can offer actions');
 assert.deepEqual(Array.from(result.history,x=>x.id),[4,5],'Finished and cancelled trips go to history');
-const active=code.slice(code.indexOf("el('trips').innerHTML=grouped.active.length"),code.indexOf("el('driver-trip-history').innerHTML="));
-const history=code.slice(code.indexOf("el('driver-trip-history').innerHTML="),code.indexOf("if(selected&&!grouped.active"));
+const active=code.slice(code.indexOf("M.setHtml('trips',grouped.active.length"),code.indexOf("M.setHtml('driver-trip-history',"));
+const history=code.slice(code.indexOf("M.setHtml('driver-trip-history',"),code.indexOf("if(selected&&!grouped.active"));
 assert.match(active,/data-action=/,'Active pane retains trip actions');
 assert.doesNotMatch(history,/data-action=|data-view=/,'History may not expose trip actions or map-selection controls');
 assert.match(code,/if\(selected&&!grouped.active.some/,'Do not continue tracking a closed trip');
