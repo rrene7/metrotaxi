@@ -201,3 +201,12 @@ En Linux/macOS o CI, ejecutar **ambos** comandos: `python scripts/validar_entreg
 - Corrección en `netlify-public/demo.js`: captura de error del mapa, texto de indisponibilidad y continuación de la interfaz con botones operativos. No modifica permisos, GPS real ni backend.
 - Regresión en `tests_cloud/test_netlify_public_demo.cjs`: simula excepción de inicialización del mapa y comprueba que pasajero y central pueden operar. Se actualiza el hash del script en `netlify-public/index.html` para evitar caché de la versión anterior.
 - Validación pendiente: ejecutar `node tests_cloud/test_netlify_public_demo.cjs`, validaciones Python y CI de GitHub; verificar manualmente el despliegue Netlify y los tres roles. No anunciar publicación hasta CI y merge.
+
+
+## CENTRAL-113 — No perder ediciones por refresco automático (21-11-2026)
+
+- Riesgo: la central ejecutaba `load()` cada 10 segundos y reconstruía formularios del listado con `innerHTML`; una tarifa editada, unidad elegida o expediente de vehículo sin guardar podía desaparecer.
+- Solución: `web-staging/js/central.js` mantiene la actualización automática cuando no hay ediciones activas, pero la pospone si se edita un punto, hay foco en listas interactivas, un campo cambió, una unidad fue seleccionada o se eligió fotografía. También vuelve a comprobar tras cada consulta HTTP, por si la edición comenzó durante la espera.
+- Botones manuales `Actualizar` siguen disponibles; podrían descartar cambios no guardados por ser una acción explícita. Guardar y cancelar reanudan el flujo normal si no quedan ediciones pendientes.
+- Test: `tests_cloud/test_central_autorefresh_guard.cjs` verifica estados de edición y refresco inactivo. Ejecutar `python scripts/validar_cloud.py` y demás CI; prueba visual en Windows/Chrome pendiente.
+- No se modifican API, roles, CSRF, GPS, flota real ni `runtime/`.
