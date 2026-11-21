@@ -1,5 +1,5 @@
 'use strict';(async()=>{
- const M=MTCloud,el=id=>document.getElementById(id);let busy=false,gpsWatch=null,lastSent=0,gpsSending=false,currentDriver=null,allTrips=[],selected=null,lastMapSelection=null;
+ const M=MTCloud,el=id=>document.getElementById(id);let busy=false,gpsWatch=null,lastSent=0,gpsSending=false,gpsGeneration=0,gpsInFlight=null,gpsStopping=null,currentDriver=null,allTrips=[],selected=null,lastMapSelection=null;
  const map=MetroMap.make({id:'map-conductor'});
  try{const s=await M.me();if(!s.authenticated||s.user.role!=='driver'){location.replace('/ingresar.html');return;}}
  catch(e){M.notice(e.message,true);return;}
@@ -41,9 +41,54 @@
   try{await M.api('/api/trips/action','POST',{action:b.dataset.action,trip_id:Number(b.dataset.trip)});selected=Number(b.dataset.trip);M.notice('Estado actualizado');await load()}catch(err){M.notice(err.message,true)}
  });
  document.querySelectorAll('[data-status]').forEach(b=>b.addEventListener('click',async()=>{try{await M.api('/api/driver/status','POST',{status:b.dataset.status});if(b.dataset.status==='off')await stopGPS();await load()}catch(err){M.notice(err.message,true)}}));
- async function stopGPS(){if(gpsWatch!==null){navigator.geolocation.clearWatch(gpsWatch);gpsWatch=null;}try{await M.api('/api/driver/location/stop','POST',{})}catch(e){}el('gps-status').textContent='GPS detenido. Las posiciones anteriores caducan.';if(currentDriver)delete currentDriver.location;mapCurrent();}
- el('gps-start').addEventListener('click',async()=>{try{const d=(await M.api('/api/mine')).driver;if(d.status==='off'||d.suspended)throw Error('Primero entra en servicio');if(!navigator.geolocation)throw Error('Geolocalización no disponible');if(gpsWatch!==null)return;
-  gpsWatch=navigator.geolocation.watchPosition(async p=>{if(gpsSending||Date.now()-lastSent<12000)return;gpsSending=true;try{const o=await M.api('/api/driver/location','POST',{lat:p.coords.latitude,lng:p.coords.longitude,accuracy_m:p.coords.accuracy,consent:true});lastSent=Date.now();if(currentDriver){currentDriver.location={lat:p.coords.latitude,lng:p.coords.longitude,updated_at:o.updated_at,source:'device'}};el('gps-status').textContent=`GPS enviado · precisión ±${Math.round(o.accuracy_m)} m · ${o.updated_at}`;if(selected)mapCurrent();}catch(e){el('gps-status').textContent='Error GPS: '+e.message}finally{gpsSending=false;}},e=>{el('gps-status').textContent='GPS no disponible: '+e.message;stopGPS()},{enableHighAccuracy:true,maximumAge:0,timeout:20000});el('gps-status').textContent='Esperando permiso GPS...';
+ async function stopGPS(){
+  if(gpsStopping)return gpsStopping;
+  ++gpsGeneration; // Invalidate previous watch callbacks before any await.
+  if(gpsWatch!==null){navigator.geolocation.clearWatch(gpsWatch);gpsWatch=null;}
+  if(currentDriver)delete currentDriver.location;
+  mapCurrent();
+  el('gps-status').textContent='Deteniendo GPS y confirmando con la central...';
+  gpsStopping=(async()=>{
+   try{
+    // A request already sent may arrive after a stop request. Drain it first.
+    if(gpsInFlight)await gpsInFlight.catch(()=>{});
+    await M.api('/api/driver/location/stop','POST',{});
+    el('gps-status').textContent='GPS detenido y confirmado. Las posiciones anteriores caducan.';
+   }catch(e){
+    el('gps-status').textContent='GPS local detenido, pero no se confirmó en la central: '+e.message+'. Reintenta detener GPS.';
+    M.notice('No se pudo confirmar la detención de GPS: '+e.message,true);
+   }finally{gpsStopping=null;}
+  })();
+  return gpsStopping;
+ }
+ el('gps-start').addEventListener('click',async()=>{try{
+  if(gpsStopping)throw Error('Se está confirmando la detención anterior del GPS');
+  if(gpsWatch!==null)return;
+  const generation=gpsGeneration;
+  const d=(await M.api('/api/mine')).driver;
+  if(generation!==gpsGeneration||gpsStopping)return;
+  if(d.status==='off'||d.suspended)throw Error('Primero entra en servicio');
+  if(!navigator.geolocation)throw Error('Geolocalización no disponible');
+  gpsWatch=navigator.geolocation.watchPosition(p=>{
+   if(generation!==gpsGeneration||gpsStopping||gpsSending||Date.now()-lastSent<12000)return;
+   gpsSending=true;
+   const upload=M.api('/api/driver/location','POST',{lat:p.coords.latitude,lng:p.coords.longitude,accuracy_m:p.coords.accuracy,consent:true});
+   gpsInFlight=upload;
+   upload.then(o=>{
+    if(generation!==gpsGeneration)return; // A stopped watch cannot restore its old marker.
+    lastSent=Date.now();
+    if(currentDriver)currentDriver.location={lat:p.coords.latitude,lng:p.coords.longitude,updated_at:o.updated_at,source:'device'};
+    el('gps-status').textContent=`GPS enviado · precisión ±${Math.round(o.accuracy_m)} m · ${o.updated_at}`;
+    if(selected)mapCurrent();
+   }).catch(e=>{
+    if(generation===gpsGeneration)el('gps-status').textContent='Error GPS: '+e.message;
+   }).finally(()=>{if(gpsInFlight===upload)gpsInFlight=null;gpsSending=false;});
+  },e=>{
+   if(generation!==gpsGeneration)return;
+   el('gps-status').textContent='GPS no disponible: '+e.message;
+   stopGPS();
+  },{enableHighAccuracy:true,maximumAge:0,timeout:20000});
+  el('gps-status').textContent='Esperando permiso GPS...';
  }catch(e){M.notice(e.message,true)}});
  el('gps-stop').addEventListener('click',stopGPS);
  async function loadQR(){try{const r=await M.api('/api/driver/referral');const a=document.createElement('a');a.href=r.url||'#';a.textContent=r.url?new URL(r.url,location.origin).href:'QR revocado';a.target='_blank';a.rel='noopener noreferrer';el('qr-box').innerHTML=`${r.qr_url?'<img src="'+M.esc(r.qr_url)+'" alt="Código QR de afiliación" style="width:180px;max-width:100%"><br>':''}<span class="tag">Clientes registrados por mi QR: ${r.count}</span><p class="tiny">En local 127.0.0.1 el QR NO sirve desde otro teléfono; publicar HTTPS antes de compartir.</p>`;el('qr-box').appendChild(a)}catch(e){el('qr-box').textContent='QR no disponible: '+e.message}}

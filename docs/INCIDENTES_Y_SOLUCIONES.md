@@ -119,3 +119,10 @@ El pasajero ya no recibe ofertas ni datos del conductor antes de la aceptación;
 - **Causa:** cargas asíncronas de carreras/mensajes en paralelo, sin protección contra respuestas fuera de orden.
 - **Solución:** generación incremental por consulta, invalidación antes de mutaciones y descarte de éxitos/errores de generaciones antiguas.
 - **Regresión:** `tests_cloud/test_customer_polling_race.cjs` verifica la guardia y los puntos de invalidación. Revisión manual en dos navegadores y retraso de red pendiente.
+
+
+## GPS-115 — Ubicación reaparece después de detener GPS (21-11-2026)
+
+- **Causa:** carreras asíncronas entre `/api/driver/location` y `/api/driver/location/stop`, callbacks del watch anteriores aún activos y detención remota fallida silenciada.
+- **Corrección:** invalidación de generación GPS antes de esperar, liquidación de carga pendiente previa al POST de detención, exclusión de arranques simultáneos, aviso al conductor cuando la detención en servidor no se confirma y no restaurar marcadores con respuestas antiguas.
+- **Control:** `tests_cloud/test_driver_gps_stop_race.cjs` y recorrido manual en Chrome/Android con conexión intermitente; nunca afirmar que la API confirmó detención si devolvió error.

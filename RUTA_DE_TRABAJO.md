@@ -218,3 +218,11 @@ En Linux/macOS o CI, ejecutar **ambos** comandos: `python scripts/validar_entreg
 - Corrección: cada consulta recibe una generación monotónica. Solo la generación más reciente puede modificar la UI o mostrar su error. Solicitar, cancelar y cerrar sesión invalidan consultas en vuelo antes de modificar datos.
 - Prueba automática nueva: `tests_cloud/test_customer_polling_race.cjs`, incluida en `scripts/validar_cloud.py`. Requiere aprobación del workflow antes de fusionar. Las solicitudes siguen pasando por la API con cookies, sesión y CSRF.
 - Alcance: únicamente cliente web staging; no afecta Netlify público, servicio remoto, flota, `runtime/` ni esquema DB. Prueba móvil con cambios concurrentes sigue pendiente.
+
+
+## GPS-115 — Detención de GPS sin cargas atrasadas (21-11-2026)
+
+- Riesgo: en `web-staging/js/conductor.js`, la solicitud `POST /api/driver/location` podía quedar pendiente al pulsar «Detener GPS». Un envío tardío podía llegar al servidor después de `/api/driver/location/stop`, restableciendo la ubicación; el callback también podía dibujar el marcador viejo tras detenerlo.
+- Corrección: invalidar inmediatamente callbacks de la sesión GPS anterior y retirar el marcador; esperar el envío pendiente antes de confirmar la detención remota. Bloquear un nuevo inicio durante la detención, serializar pulsaciones repetidas y mostrar fallo explícito si el servidor no confirma. No se elimina ni relaja la geocerca aplicada por la API.
+- Regresión: `tests_cloud/test_driver_gps_stop_race.cjs` ensaya carga pendiente, doble detención, error del servidor y guardias de callbacks antiguos. Ejecutar `python scripts/validar_cloud.py` y la puerta CI, más prueba real Android pendiente.
+- Alcance: frontend de conductor en staging, sin tocar SQLite local, PostgreSQL, roles, contraseñas ni `runtime/`. Para GPS confiable en segundo plano todavía hace falta Android físico, HTTPS y medidas contra suplantación.
