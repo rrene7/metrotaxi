@@ -122,5 +122,5 @@ ${['pending','offered','accepted','inprogress'].includes(t.status)?`<button clas
    }catch(err){M.notice(err.message,true);}
  });
  el('map-refresh').addEventListener('click',load);el('refresh').addEventListener('click',load);el('logout').addEventListener('click',async()=>{try{await M.logout()}catch(e){M.notice(e.message,true)}});
- await load();setInterval(()=>{if(!document.hidden)load({automatic:true})},10000);
+ await load();setInterval(()=>{if(!document.hidden||alerts.isEnabled())load({automatic:true})},10000);
 })();
