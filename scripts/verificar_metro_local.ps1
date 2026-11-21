@@ -47,7 +47,7 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'No se encuentra metrotaxi-app-1.' }
     $binding = $ports | ConvertFrom-Json
     $mapping = $binding.'8080/tcp'
-    if ($null -eq $mapping -or -not @($mapping | Where-Object { $_.HostIp -eq '127.0.0.1' -and $_.HostPort -eq '8770' }).Count) {
+    if ($null -eq $mapping -or @($mapping | Where-Object { $_.HostIp -eq '127.0.0.1' -and $_.HostPort -eq '8770' }).Count -eq 0) {
         Write-Host 'ERROR: Docker NO publica 127.0.0.1:8770->8080. Comprueba la creacion del contenedor.' -ForegroundColor Red
         $issues++
     } else {
