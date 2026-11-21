@@ -16,7 +16,7 @@ class LivePanelsTests(unittest.TestCase):
             html=(ROOT/f'web-staging/{role}.html').read_text(encoding='utf-8')
             for id in ids:self.assertIn(f"M.setHtml('{id}',",s)
             self.assertIn('/js/api.js?v=live-122',html)
-            self.assertIn(f'/js/{role}.js?v=live-122',html)
+            self.assertIn(f'/js/{role}.js?v='+('live-122' if role=='cliente' else 'alerts-123'),html)
     def test_roles_and_gps_guards_remain_present(self):
         s=(ROOT/'web-staging/js/conductor.js').read_text(encoding='utf-8')
         self.assertIn("s.user.role!=='driver'",s)

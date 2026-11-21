@@ -95,3 +95,14 @@ No se marcan estas comprobaciones como ejecutadas en Windows solo porque CI pase
 - [ ] Verificar que un error de API muestra Reintentar y que el panel se recupera cuando vuelve a responder.
 
 **Pendiente:** evaluación manual en Chrome y Android físicos; pruebas automatizadas no equivalen a uso comercial.
+
+## ALERTS-123 — Avisos de carreras
+
+- [ ] Al abrir conductor con ofertas existentes, no se anuncian todas como nuevas; el primer sondeo establece línea base.
+- [ ] Central asigna una nueva carrera ficticia: conductor conectado ve aviso de nueva oferta sin recargar ni perder GPS o pestaña de historial.
+- [ ] Una carrera nueva en estado pendiente avisa únicamente a la central, no al conductor ni a pasajeros ajenos.
+- [ ] Con la pestaña abierta, llega un aviso una vez; sondeos posteriores no repiten sonido para la misma oferta.
+- [ ] Activar/desactivar avisos sonoros mediante control explícito, respetar rechazo de permisos de notificaciones y comprobar con varios navegadores.
+- [ ] GPS, llegada obligatoria a recogida/destino, CSRF, privacidad y acciones de carrera permanecen funcionales.
+
+**Limitación:** no es push en segundo plano ni funciona con la página cerrada. Prueba real en Android pendiente.
