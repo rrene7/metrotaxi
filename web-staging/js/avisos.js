@@ -40,6 +40,6 @@ window.MTAlerts={
   }
   button.addEventListener('click',enable);
   element.addEventListener('click',()=>{element.hidden=true;});
-  return {observe};
+  return {observe,isEnabled:()=>enabled};
  }
 };
