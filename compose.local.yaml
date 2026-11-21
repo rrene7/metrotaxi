@@ -24,6 +24,7 @@ services:
     restart: "no"
     environment:
       METRO_LOCAL_DB_PASSWORD: ${METRO_LOCAL_DB_PASSWORD:?Configura metro-local.env}
+      METRO_FACTORY_ONLY: "1"
       DATABASE_URL: postgresql+psycopg://metrotaxi:${METRO_LOCAL_DB_PASSWORD:?Configura metro-local.env}@db:5432/metrotaxi_local
     ports:
       - "127.0.0.1:8770:8080"
