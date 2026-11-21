@@ -154,3 +154,10 @@ El pasajero ya no recibe ofertas ni datos del conductor antes de la aceptación;
 - **Riesgo:** el CI anterior aprobaba sintaxis, API y estructura del Compose sin arrancar PostgreSQL y FastAPI juntos; podían existir fallos de red, configuración de URL, cookies, puerto o persistencia sin detectar.
 - **Prevención:** job `docker-local-smoke` y script `scripts/smoke_local_docker.py` en runner efímero; validan primer bootstrap, /api/health, login desde Origin local, Host externo rechazado y persistencia después de stop/start. No usar base real ni contraseñas de usuarios.
 - **Límite:** CI Linux no sustituye ensayo Windows Docker Desktop y Android físico; no afirmar acceso desde otros dispositivos ni despliegue online.
+
+
+### Hallazgo CI LOCAL-119 — Importación del CLI bloqueada (21-11-2026)
+
+- **Reproducción:** primer job real de Docker falla al ejecutar `python -m cloud.manage --init-schema` antes de crear tablas. El import de `cloud.app` construía automáticamente una API adicional en modo producción porque ya existía `DATABASE_URL`; exigía `METRO_ALLOWED_ORIGINS` HTTPS incluso cuando el comando era solo inicialización de PostgreSQL local.
+- **Arreglo acotado:** `METRO_FACTORY_ONLY=1` solo en `compose.local.yaml` evita construir esa API implícita durante importaciones. `cloud.local_docker` continúa creando la app explícitamente mediante `create_app(..., test_mode=True, auto_create=False)` y exige PostgreSQL/schema. Producción y su validación de host/origen no se relajan.
+- **Control:** prueba estática `test_factory_only_prevents_cli_from_building_unrelated_public_app` y prueba real del bootstrap mediante `docker-local-smoke`; verificar nueva ejecución de CI.
