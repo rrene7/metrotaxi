@@ -79,6 +79,84 @@ class CloudFlowTests(unittest.TestCase):
         self.assertEqual(self.driver.post('/api/trips/action',json={'trip_id':tid,'action':'complete'},headers=self.csrf(self.driver)).status_code,200)
         self.assertEqual(self.driver.get('/api/mine').json()['driver']['status'],'available')
 
+    def test_three_independent_sessions_full_dispatch_and_history(self):
+        """DISPATCH-117: passenger -> central -> driver with private history and hard GPS gates."""
+        # Each TestClient has a distinct session cookie and CSRF token.
+        passenger_session = self.customer.get('/api/me').json()
+        central_session = self.admin.get('/api/me').json()
+        driver_session = self.driver.get('/api/me').json()
+        self.assertEqual({passenger_session['user']['role'],
+                          central_session['user']['role'],
+                          driver_session['user']['role']}, {'customer', 'admin', 'driver'})
+        self.assertEqual(len({passenger_session['csrf'], central_session['csrf'],
+                              driver_session['csrf']}), 3)
+
+        tid = self.new_trip()
+        self.assertEqual(self.customer.get('/api/customer/trips').json()['trips'][0]['status'], 'pending')
+        self.assertEqual(self.other_customer.get('/api/customer/trips').json()['trips'], [])
+        self.assertEqual(self.driver.get('/api/mine').json()['trips'], [])
+
+        # Central owns assignments and private customer contact data.
+        central_trip = next(t for t in self.admin.get('/api/trips').json()['trips'] if t['id'] == tid)
+        self.assertEqual(central_trip['status'], 'pending')
+        self.assertTrue(central_trip['phone'])
+        self.assertEqual(self.driver.post('/api/driver/status',
+                         json={'status': 'available'}, headers=self.csrf(self.driver)).status_code, 200)
+        self.assertEqual(self.assign(tid).status_code, 200)
+        self.assertEqual(self.customer.get('/api/customer/trips').json()['trips'][0]['status'], 'pending',
+                         'Passenger must not see a dispatch offer')
+        self.assertNotIn('driver', self.customer.get('/api/customer/trips').json()['trips'][0])
+        self.assertEqual(self.other_driver.get('/api/mine').json()['trips'], [])
+
+        offered = next(t for t in self.driver.get('/api/mine').json()['trips'] if t['id'] == tid)
+        self.assertEqual(offered['status'], 'offered')
+        self.assertNotIn('phone', offered)
+        self.assertEqual(self.driver.post('/api/trips/action',
+                         json={'trip_id': tid, 'action': 'accept'}, headers=self.csrf(self.driver)).status_code, 200)
+        accepted = self.customer.get('/api/customer/trips').json()['trips'][0]
+        self.assertEqual(accepted['status'], 'accepted')
+        self.assertTrue(accepted['driver']['confirmed'])
+        self.assertEqual(accepted['driver']['unit'], 'MT-01')
+
+        # A fresh but distant GPS location is not permission to pick up.
+        start = {'trip_id': tid, 'action': 'start'}
+        complete = {'trip_id': tid, 'action': 'complete'}
+        gps = {'lat': 9.07, 'lng': -79.28, 'accuracy_m': 12, 'consent': True}
+        self.assertEqual(self.driver.post('/api/driver/location', json=gps,
+                         headers=self.csrf(self.driver)).status_code, 200)
+        self.assertEqual(self.driver.post('/api/trips/action', json=start,
+                         headers=self.csrf(self.driver)).status_code, 409)
+        self.assertFalse(next(t for t in self.driver.get('/api/mine').json()['trips']
+                              if t['id'] == tid)['arrival']['start']['allowed'])
+
+        self.assertEqual(self.driver.post('/api/driver/location',
+                         json=gps | {'lat': 9.08}, headers=self.csrf(self.driver)).status_code, 200)
+        self.assertEqual(self.driver.post('/api/trips/action', json=start,
+                         headers=self.csrf(self.driver)).status_code, 200)
+        self.assertEqual(self.customer.get('/api/customer/trips').json()['trips'][0]['status'], 'inprogress')
+        self.assertEqual(self.driver.post('/api/trips/action', json=complete,
+                         headers=self.csrf(self.driver)).status_code, 409,
+                         'Destination geofence must block premature completion')
+
+        self.assertEqual(self.driver.post('/api/driver/location',
+                         json=gps | {'lat': 9.09, 'lng': -79.29},
+                         headers=self.csrf(self.driver)).status_code, 200)
+        self.assertEqual(self.driver.post('/api/trips/action', json=complete,
+                         headers=self.csrf(self.driver)).status_code, 200)
+        self.assertEqual(self.customer.get('/api/customer/trips').json()['trips'][0]['status'], 'done')
+        self.assertEqual(next(t for t in self.admin.get('/api/trips').json()['trips']
+                              if t['id'] == tid)['status'], 'done')
+
+        mine = self.driver.get('/api/mine').json()
+        completed = next(t for t in mine['trips'] if t['id'] == tid)
+        self.assertEqual(completed['status'], 'done', 'Closed trip remains in private driver history')
+        self.assertFalse([t for t in mine['trips'] if t['id'] == tid
+                          and t['status'] in ('offered', 'accepted', 'inprogress')])
+        self.assertNotIn('phone', completed)
+        self.assertEqual(self.other_driver.get('/api/mine').json()['trips'], [])
+        self.assertEqual(self.other_customer.get('/api/customer/trips').json()['trips'], [])
+        self.assertEqual(mine['driver']['status'], 'available')
+
     def test_csrf_stays_mandatory(self):
         self.assertEqual(self.customer.post('/api/requests',json={'pickup':'Cerca','station':'Pacora','consent':True}).status_code,403)
         self.assertEqual(self.admin.post('/api/trips/assign',json={'trip_id':1,'driver_id':1}).status_code,403)
