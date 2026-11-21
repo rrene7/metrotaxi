@@ -78,7 +78,7 @@ const failingDocument={
  createElement:tag=>new Element(tag)
 };
 const failingWindow={L:{map:()=>{throw Error('Map renderer unavailable')}}};
-const failingContext={document:failingDocument,window:failingWindow,console};
+const failingContext={document:failingDocument,window:failingWindow,L:failingWindow.L,console};
 vm.runInNewContext(code,failingContext,{filename:'demo.js',timeout:3000});
 assert.match(failingGet('tile-status').textContent,/continuar la simulaci[oó]n/i,'Map failure must be explicit and non-blocking');
 const request=failingGet('actions').children.find(b=>b.textContent==='Solicitar taxi');
