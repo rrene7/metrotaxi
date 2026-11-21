@@ -273,3 +273,5 @@ En Linux/macOS o CI, ejecutar **ambos** comandos: `python scripts/validar_entreg
 | 21-11-2026 | LOCAL-121 | Se documentó el conflicto real entre Python de Windows y Docker sobre 8770; comprobador seguro de proceso, puerto, API, PostgreSQL y formulario | El usuario confirmó acceso de admin, carrera MT-1 visible en pasajero/conductor y funcionamiento inicial de GPS; prueba Windows del nuevo diagnóstico pendiente | Validar script en Windows y flujo físico completo antes de producción |
 
 | 21-11-2026 | LIVE-122 | Refresco incremental de paneles pasajero/central/conductor (sin reconstruir DOM ante datos idénticos) y versiones de JS para evitar caché | Pruebas JS/Python añadidas; CI y prueba manual por confirmar | Abrir tres sesiones y verificar cambios de estado sin perder foco ni pestañas; Android real pendiente |
+
+| 21-11-2026 | ALERTS-123 | Aviso de nuevas ofertas para conductor y nuevas solicitudes para central, sin recargas y sin avisos repetidos; sonido/notificación opcionales por acción explícita | Pruebas JS/Python añadidas, CI pendiente | Validar en Chrome y Android; no hay push con app cerrada ni aviso garantizado en segundo plano |
