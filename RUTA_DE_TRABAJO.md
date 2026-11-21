@@ -260,3 +260,10 @@ En Linux/macOS o CI, ejecutar **ambos** comandos: `python scripts/validar_entreg
 - Nuevo script `scripts/smoke_local_docker.py` **exclusivamente para runner efímero de GitHub Actions**: valida Compose, construye API, inicia Postgres, crea esquema inicial en base vacía, crea administrador ficticio, comprueba HTTP/login/Origin/Host/cookie, reinicia contenedores y confirma persistencia de la sesión.
 - Workflow `.github/workflows/validar.yml`: trabajo separado `docker-local-smoke` tras la batería existente, sin credenciales reales y sin eliminar volúmenes. Se registra un control estático en `tests_cloud/test_local_docker_pilot.py`.
 - No se ejecutó Docker Desktop del usuario, no se habilitó hosting, no se cambió infraestructura de producción ni se tocaron `runtime/` o volúmenes locales. Antes de integrar a main revisar ambos trabajos CI, incluidos logs de Docker; test visual móvil sigue pendiente.
+
+
+### Revisión LOCAL-119 tras pruebas reales de Compose
+
+- CI reveló dos problemas no cubiertos por pruebas estáticas: import de `cloud.app` desde el CLI de bootstrap requería configuración HTTPS de una API ajena al modo local; se añadió `METRO_FACTORY_ONLY=1` únicamente a Compose local para evitar esa construcción implícita y conservar los controles en `create_app`.
+- La red `internal: true` aplicada también a la API impidió conectar el navegador del host pese a tener `ports: 127.0.0.1:8770`; se añadió la red `metro_loopback` a `app`, manteniendo `db` solo en `metro_private` interna y sin puerto de BD.
+- Estas reparaciones están en PR y requieren nuevas pruebas reales de `docker-local-smoke`; no declarar sistema operativo hasta CI completo en verde. Volúmenes y datos reales no modificados.
