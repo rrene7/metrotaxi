@@ -269,3 +269,5 @@ En Linux/macOS o CI, ejecutar **ambos** comandos: `python scripts/validar_entreg
 - Estas reparaciones están en PR y requieren nuevas pruebas reales de `docker-local-smoke`; no declarar sistema operativo hasta CI completo en verde. Volúmenes y datos reales no modificados.
 
 | 21-11-2026 | LOCAL-120 | Inicio de sesión en Chrome rechazado aunque el hash y la API Python devolvieron aceptación; se incorporó mostrar contraseña, scripts versionados y feedback explícito | Código y regresión automatizada añadidos; CI y prueba en navegador pendientes | Verificar login real en Windows tras actualizar Docker; no afirmar causa raíz sin evidencia |
+
+| 21-11-2026 | LOCAL-121 | Se documentó el conflicto real entre Python de Windows y Docker sobre 8770; comprobador seguro de proceso, puerto, API, PostgreSQL y formulario | El usuario confirmó acceso de admin, carrera MT-1 visible en pasajero/conductor y funcionamiento inicial de GPS; prueba Windows del nuevo diagnóstico pendiente | Validar script en Windows y flujo físico completo antes de producción |
