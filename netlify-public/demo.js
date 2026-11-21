@@ -93,7 +93,7 @@ try {
  // Map failures are optional: the trip controls must remain usable.
  map=null;
  mapEl.textContent='Mapa temporalmente no disponible';
- $('tile-status').textContent='No se pudo abrir el mapa. Puedes continuar la simulación sin él.';
+ $$('tile-status').textContent='No se pudo abrir el mapa. Puedes continuar la simulación sin él.';
  console.error('Metro Taxi: mapa no disponible',error);
 }
 render();
