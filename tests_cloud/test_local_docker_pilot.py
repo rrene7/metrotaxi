@@ -44,6 +44,24 @@ class LocalDockerPilotChecks(unittest.TestCase):
         self.assertIn("127.0.0.1", source)
         self.assertIn("StaticFiles(", source)
 
+    def test_real_docker_smoke_is_mandatory_after_unit_tests(self):
+        ci = (ROOT / ".github/workflows/validar.yml").read_text(encoding="utf-8")
+        smoke = (ROOT / "scripts/smoke_local_docker.py").read_text(encoding="utf-8")
+        self.assertIn("docker-local-smoke:", ci)
+        self.assertIn("needs: pruebas", ci)
+        self.assertIn("python3 scripts/smoke_local_docker.py", ci)
+        self.assertIn('GITHUB_ACTIONS', smoke)
+        self.assertIn('docker", "compose"', smoke)
+        self.assertIn('"--init-schema"', smoke)
+        self.assertIn('"/api/health"', smoke)
+        self.assertIn('"/ingresar.html"', smoke)
+        self.assertIn('"/api/me"', smoke)
+        self.assertIn('"Origin": BASE', smoke)
+        self.assertIn('"Host": "outside.example"', smoke)
+        self.assertIn('"start", "app"', smoke)
+        self.assertIn('"stop", "app", "db"', smoke)
+        self.assertNotIn('down -v', smoke)
+
     def test_runbook_uses_safe_initialization_and_preserves_volumes(self):
         doc = (ROOT / "docs/PILOTO_DOCKER_LOCAL.md").read_text(encoding="utf-8")
         self.assertIn("--init-schema", doc)
