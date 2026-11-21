@@ -252,3 +252,11 @@ En Linux/macOS o CI, ejecutar **ambos** comandos: `python scripts/validar_entreg
 - Primera instalación manual mediante `cloud.manage --init-schema` sobre base vacía y creación interactiva de cuentas admin/operador/conductor. `docs/PILOTO_DOCKER_LOCAL.md` contiene comandos de Windows y recuperación sin eliminación de volúmenes.
 - Regresión `tests_cloud/test_local_docker_pilot.py` verifica red/puertos, persistencia, exclusiones de secretos y ausencia de bootstrap implícito. Ejecutar CI; pruebas manuales con Docker Desktop en el equipo y en teléfonos HTTPS continúan pendientes.
 - La cuenta Render detectada pertenece a un espacio institucional distinto; no se utilizará para Metro Taxi sin autorización expresa. No se creó servicio Render ni base externa.
+
+
+## LOCAL-119 — prueba real automatizada de arranque Docker (21-11-2026)
+
+- LOCAL-118 solo tenía pruebas estáticas: no ejecutaba contenedores de PostgreSQL ni verificaba las cookies en una API levantada. Riesgo de que el piloto fallara en su primer arranque o perdiera la sesión al reiniciar.
+- Nuevo script `scripts/smoke_local_docker.py` **exclusivamente para runner efímero de GitHub Actions**: valida Compose, construye API, inicia Postgres, crea esquema inicial en base vacía, crea administrador ficticio, comprueba HTTP/login/Origin/Host/cookie, reinicia contenedores y confirma persistencia de la sesión.
+- Workflow `.github/workflows/validar.yml`: trabajo separado `docker-local-smoke` tras la batería existente, sin credenciales reales y sin eliminar volúmenes. Se registra un control estático en `tests_cloud/test_local_docker_pilot.py`.
+- No se ejecutó Docker Desktop del usuario, no se habilitó hosting, no se cambió infraestructura de producción ni se tocaron `runtime/` o volúmenes locales. Antes de integrar a main revisar ambos trabajos CI, incluidos logs de Docker; test visual móvil sigue pendiente.
