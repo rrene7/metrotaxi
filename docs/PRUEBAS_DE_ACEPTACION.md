@@ -106,3 +106,14 @@ No se marcan estas comprobaciones como ejecutadas en Windows solo porque CI pase
 - [ ] GPS, llegada obligatoria a recogida/destino, CSRF, privacidad y acciones de carrera permanecen funcionales.
 
 **Limitación:** no es push en segundo plano ni funciona con la página cerrada. Prueba real en Android pendiente.
+
+## SESSION-124 — Verificación de navegación sin saltos
+
+- [ ] Con sesión de pasajero del mismo perfil Chrome, abrir `/ingresar.html`: no redirige automáticamente a central; muestra aviso y permite iniciar sesión como personal.
+- [ ] Con sesión de pasajero abrir `/central.html`: navegación a cliente, sin bucle central/login.
+- [ ] Con sesión de conductor abrir central: abre conductor; con admin abrir conductor: abre central.
+- [ ] Sin sesión, abrir central o conductor: muestra acceso de personal sin múltiples saltos.
+- [ ] Usar perfiles de Chrome independientes (no dos pestañas ni dos ventanas de incógnito compartidas) para validar pasajero/central/conductor al mismo tiempo.
+- [ ] El mapa y listas continúan operando, no se pierden formularios en edición y nadie accede a datos de otro rol.
+
+**Pendiente de comprobar presencialmente en el equipo Windows del usuario.**
