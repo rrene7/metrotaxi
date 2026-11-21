@@ -1,0 +1,38 @@
+# Piloto LOCAL exclusivamente: Docker Desktop + PostgreSQL persistente, sin puerto DB publicado.
+# No confundir con el Dockerfile de producción ni con la demo pública Netlify.
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: metrotaxi_local
+      POSTGRES_USER: metrotaxi
+      POSTGRES_PASSWORD: ${METRO_LOCAL_DB_PASSWORD:?Configura metro-local.env}
+    volumes:
+      - metro_local_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U metrotaxi -d metrotaxi_local"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+    networks: [metro_private]
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: ["uvicorn", "cloud.local_docker:app", "--host", "0.0.0.0", "--port", "8080"]
+    restart: "no"
+    environment:
+      METRO_LOCAL_DB_PASSWORD: ${METRO_LOCAL_DB_PASSWORD:?Configura metro-local.env}
+      DATABASE_URL: postgresql+psycopg://metrotaxi:${METRO_LOCAL_DB_PASSWORD:?Configura metro-local.env}@db:5432/metrotaxi_local
+    ports:
+      - "127.0.0.1:8770:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks: [metro_private]
+volumes:
+  metro_local_pgdata:
+networks:
+  metro_private:
+    internal: true

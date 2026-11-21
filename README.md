@@ -61,3 +61,8 @@ También está disponible el workflow manual `Actions → Metro Taxi - Comprobar
 ## Netlify: flujo automático igual que HidroLav507
 
 `netlify.toml` publica **solo** la simulación `netlify-public/` tras pasar su prueba de JavaScript. Para enlazar un proyecto nuevo Netlify a `main`, consulta `docs/NETLIFY_COMO_HIDROLAV507.md`. No sustituye a la API FastAPI y PostgreSQL: las carreras reales todavía no están disponibles públicamente.
+
+
+## Piloto local con Docker Desktop y PostgreSQL (LOCAL-118)
+
+Si prefieres validar el flujo multiusuario **sin depender de servicios de pago ni abrir tu computadora a Internet**, utiliza `compose.local.yaml` y el instructivo `docs/PILOTO_DOCKER_LOCAL.md`. PostgreSQL usa un volumen persistente, no expone su puerto y la web/API solo están accesibles en `127.0.0.1:8770`. **No reemplaza el piloto HTTPS real ni permite probar GPS desde otros teléfonos.** Las contraseñas privadas viven en `metro-local.env` (excluido de Git y Docker build). Nunca borres volúmenes.

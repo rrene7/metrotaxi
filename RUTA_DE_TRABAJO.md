@@ -242,3 +242,13 @@ En Linux/macOS o CI, ejecutar **ambos** comandos: `python scripts/validar_entreg
 - El recorrido comprueba solicitud pendiente, oferta privada de central, aceptación, geocerca de recogida, estado en curso, geocerca de destino, finalización, historial privado del conductor y conductor de nuevo disponible.
 - La prueba usa base SQLite efímera en `test_mode=True`; no abre la API en Internet, no usa teléfonos ni ubicaciones reales y no toca `runtime/` ni `_runtime_staging/`. Complementa, pero NO reemplaza, la integración PostgreSQL temporal existente en CI y la verificación física de GPS en Android.
 - Antes de desplegar piloto HTTPS real: dominio y PostgreSQL privados, credenciales generadas fuera de GitHub, pruebas de cookies/CSRF en HTTPS, mapas autorizados y examen de seguridad. Registrar manual de aceptación sin marcar pasos no realizados.
+
+
+## LOCAL-118 — Piloto Docker/PostgreSQL limitado a la PC (21-11-2026)
+
+- Se prepara `compose.local.yaml` con PostgreSQL 16 persistente en volumen nombrado y red interna, sin `ports` para la base, y API/web enlazada solo a `127.0.0.1:8770`. Contenedor API reutiliza Dockerfile sin root pero arranca `cloud.local_docker:app`, no la app pública.
+- Entrada local: PostgreSQL obligatorio (solo hostname `db` y base `metrotaxi_local`), `test_mode=True` **exclusivo de loopback**, esquema existente exigido y sin semillas ni creación automática. No desplegar esta entrada en Internet ni LAN.
+- Seguridad: clave de base aleatoria escrita en `metro-local.env` local, excluida de Git y contexto Docker. `metro-local.example.env` solo contiene marcador; nunca subir contraseña.
+- Primera instalación manual mediante `cloud.manage --init-schema` sobre base vacía y creación interactiva de cuentas admin/operador/conductor. `docs/PILOTO_DOCKER_LOCAL.md` contiene comandos de Windows y recuperación sin eliminación de volúmenes.
+- Regresión `tests_cloud/test_local_docker_pilot.py` verifica red/puertos, persistencia, exclusiones de secretos y ausencia de bootstrap implícito. Ejecutar CI; pruebas manuales con Docker Desktop en el equipo y en teléfonos HTTPS continúan pendientes.
+- La cuenta Render detectada pertenece a un espacio institucional distinto; no se utilizará para Metro Taxi sin autorización expresa. No se creó servicio Render ni base externa.

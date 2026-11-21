@@ -65,3 +65,14 @@ scripts\validar_entrega.bat
 - [ ] Probar pérdida de Internet, GPS detenido y reconexión; no utilizar clientes reales en esta etapa.
 
 **La prueba automatizada DISPATCH-117 no marca estas casillas:** requieren navegadores y teléfonos reales.
+
+
+## LOCAL-118 — Comprobación manual del piloto Docker
+
+- [ ] Ejecutar `docker compose --env-file metro-local.env -f compose.local.yaml ps` en Windows y verificar web en `127.0.0.1:8770`, sin PostgreSQL publicado.
+- [ ] Confirmar `/api/health` conectado a PostgreSQL; entrar con admin, operador, conductor y cliente ficticios en perfiles separados.
+- [ ] Reiniciar contenedores con `stop/start`; verificar que carreras y cuentas siguen en volumen persistente (sin borrar datos).
+- [ ] Comprobar que una petición desde host no local es rechazada y que otros teléfonos en LAN NO acceden al piloto HTTP.
+- [ ] Completar flujo ficticio de tres roles y geocerca, y documentar limitaciones del GPS de escritorio.
+
+Estas casillas permanecen pendientes hasta disponer de pruebas reales en el equipo.
