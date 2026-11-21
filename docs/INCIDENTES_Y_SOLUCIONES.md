@@ -147,3 +147,10 @@ El pasajero ya no recibe ofertas ni datos del conductor antes de la aceptación;
 - **Riesgo:** usar por accidente `cloud.preview`/SQLite en Internet, exponer PostgreSQL, almacenar contraseñas en Git o destruir datos al reiniciar Docker.
 - **Control:** `compose.local.yaml` limita la publicación al loopback; PostgreSQL solo en red privada Docker con volumen persistente; `cloud.local_docker` exige backend Postgres `db/metrotaxi_local` y tablas creadas manualmente; `metro-local.env` fuera de Git y del contexto de build.
 - **Pruebas:** `tests_cloud/test_local_docker_pilot.py` y batería CI. No usar `down -v`, comandos prune ni publicar puertos de la red local. Ensayo físico pendiente.
+
+
+## LOCAL-119 — arranque Docker no cubierto por pruebas de código (21-11-2026)
+
+- **Riesgo:** el CI anterior aprobaba sintaxis, API y estructura del Compose sin arrancar PostgreSQL y FastAPI juntos; podían existir fallos de red, configuración de URL, cookies, puerto o persistencia sin detectar.
+- **Prevención:** job `docker-local-smoke` y script `scripts/smoke_local_docker.py` en runner efímero; validan primer bootstrap, /api/health, login desde Origin local, Host externo rechazado y persistencia después de stop/start. No usar base real ni contraseñas de usuarios.
+- **Límite:** CI Linux no sustituye ensayo Windows Docker Desktop y Android físico; no afirmar acceso desde otros dispositivos ni despliegue online.
