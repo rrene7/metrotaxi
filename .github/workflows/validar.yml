@@ -46,3 +46,17 @@ jobs:
         env:
           METRO_TEST_POSTGRES_URL: postgresql+psycopg://postgres:local_ci_only_password@localhost:5432/metrotaxi_test
         run: python -m unittest tests_cloud.test_postgres_pilot -v
+
+  docker-local-smoke:
+    name: Piloto Docker local - arranque y persistencia
+    needs: pruebas
+    runs-on: ubuntu-latest
+    steps:
+      - name: Obtener codigo
+        uses: actions/checkout@v4
+      - name: Confirmar Docker Compose
+        run: docker compose version
+      - name: Ejecutar instalacion en contenedores efimeros
+        env:
+          CI: "true"
+        run: python3 scripts/smoke_local_docker.py
