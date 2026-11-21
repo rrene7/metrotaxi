@@ -1,4 +1,5 @@
 # Datos y secretos locales
+/metro-local.env
 /runtime/
 /_runtime_staging/
 /netlify-dist/
