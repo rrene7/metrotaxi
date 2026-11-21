@@ -226,3 +226,11 @@ En Linux/macOS o CI, ejecutar **ambos** comandos: `python scripts/validar_entreg
 - Corrección: invalidar inmediatamente callbacks de la sesión GPS anterior y retirar el marcador; esperar el envío pendiente antes de confirmar la detención remota. Bloquear un nuevo inicio durante la detención, serializar pulsaciones repetidas y mostrar fallo explícito si el servidor no confirma. No se elimina ni relaja la geocerca aplicada por la API.
 - Regresión: `tests_cloud/test_driver_gps_stop_race.cjs` ensaya carga pendiente, doble detención, error del servidor y guardias de callbacks antiguos. Ejecutar `python scripts/validar_cloud.py` y la puerta CI, más prueba real Android pendiente.
 - Alcance: frontend de conductor en staging, sin tocar SQLite local, PostgreSQL, roles, contraseñas ni `runtime/`. Para GPS confiable en segundo plano todavía hace falta Android físico, HTTPS y medidas contra suplantación.
+
+
+## DRIVER-116 — Historial independiente de servicios del conductor (21-11-2026)
+
+- Problema: `/api/mine` ya entrega carreras asignadas (hasta 60, incluidas terminadas), pero `web-staging/js/conductor.js` las mezclaba en «Servicios que me ofrece Metro Taxi». La pantalla crecía y el conductor no podía consultar su historial por separado.
+- Corrección: pestañas «Carreras activas» e «Historial» en `web-staging/conductor.html`. Solo `offered/accepted/inprogress` y otros estados no cerrados permanecen en la lista operativa; `done/cancelled` aparecen en historial con estado, recorrido y tarifa registrada, sin botones de aceptar/iniciar/finalizar o acciones de mapa.
+- Seguimiento: una carrera cerrada se retira como selección de mapa; no se agrega acceso a viajes de otros conductores. La API, CSRF, restricciones de GPS y el piloto local no cambian.
+- Regresión: `tests_cloud/test_driver_history_tabs.cjs` verifica separación de estados, ausencia de acciones en historial y control de selección. Prueba manual pendiente en Chrome/Android con dos sesiones; CI obligatorio antes de fusionar.
