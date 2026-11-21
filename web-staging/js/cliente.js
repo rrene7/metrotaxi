@@ -51,13 +51,13 @@
   const history=data.trips.filter(t=>['done','cancelled'].includes(t.status));
   if(!active.some(t=>t.id===selected)){selected=active[0]?.id||null;trackingActive=Boolean(selected);roadView=false;}
   M.setHtml('trips',active.length?active.map(t=>{
-   const d=t.driver?.confirmed?t.driver:null);
+   const d=t.driver?.confirmed?t.driver:null;
    const photo=d?.photo_url?`<img class="card-photo" src="${M.esc(d.photo_url)}" alt="Foto del conductor confirmado">`:'<span class="tag">Foto no disponible</span>';
    const driverInfo=d?`<div class="row">${photo}<div><b>🚕 ${M.esc(d.name)} · ${M.esc(d.unit)}</b><p>Placa: ${M.esc(d.plate||'Por registrar')}</p></div></div>`:'';
    const status=passengerStatuses[t.status]||'Actualizando';
    const hasMap=Boolean(d&&MetroMap.good(t.pickup_lat,t.pickup_lng));
    return `<article class="item"><div class="row between"><strong>Carrera #MT-${t.id}</strong><span class="status">${status}</span></div><p class="customer-progress">${M.esc(passengerProgress[t.status]||'Actualizando estado...')}</p><p><b>Recogida:</b> ${M.esc(t.pickup)}</p><p><b>Destino:</b> ${M.esc(t.destination||'Por confirmar')}</p>${driverInfo}<div class="actions">${hasMap?`<button class="button" data-map="${t.id}">Ver mi taxi en el mapa</button>`:''}${['pending','offered'].includes(t.status)?`<button class="button danger" data-cancel="${t.id}">Cancelar</button>`:''}</div></article>`;
-  }).join(''):'<p class="muted">No tienes una carrera activa.</p>';
+  }).join(''):'<p class="muted">No tienes una carrera activa.</p>');
   M.setHtml('trip-history',history.length?history.map(t=>`<article class="item"><div class="row between"><strong>#MT-${t.id}</strong><span class="status">${passengerStatuses[t.status]||'Finalizada'}</span></div><p>Recogida: ${M.esc(t.pickup)}</p><p>Destino: ${M.esc(t.destination||'No registrado')}</p></article>`).join(''):'<p class="muted">Aún no tienes carreras anteriores.</p>');
   M.setHtml('messages',ms.messages.length?ms.messages.slice().reverse().map(m=>`<article class="item"><b>${m.sender==='customer'?'Tú':'Central Metro Taxi'}</b><p>${M.esc(m.body)}</p></article>`).join(''):'<p>Sin mensajes.</p>');
   showSelected();
