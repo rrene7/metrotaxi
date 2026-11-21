@@ -140,3 +140,10 @@ El pasajero ya no recibe ofertas ni datos del conductor antes de la aceptación;
 - **Riesgo controlado:** mejoras independientes a cliente, central y conductor pueden romper el ciclo real o filtrar ofertas/identidad de conductor antes de aceptar.
 - **Prueba:** `tests_cloud/test_cloud_flow.py::CloudFlowTests.test_three_independent_sessions_full_dispatch_and_history`: verifica cookies/CSRF distintos, privacidad, asignación central, GPS lejano (bloqueo 409), GPS cercano (inicio y final correctos), historial privado y conductor liberado.
 - **Límite:** ejecución HTTP simulada con datos ficticios y SQLite aislada; además exigir PostgreSQL efímero de CI, revisión visual multiusuario y ensayo Android físico antes de operar. No afirmar validación GPS antifraude.
+
+
+## LOCAL-118 — No confundir demostración pública con piloto Docker privado (21-11-2026)
+
+- **Riesgo:** usar por accidente `cloud.preview`/SQLite en Internet, exponer PostgreSQL, almacenar contraseñas en Git o destruir datos al reiniciar Docker.
+- **Control:** `compose.local.yaml` limita la publicación al loopback; PostgreSQL solo en red privada Docker con volumen persistente; `cloud.local_docker` exige backend Postgres `db/metrotaxi_local` y tablas creadas manualmente; `metro-local.env` fuera de Git y del contexto de build.
+- **Pruebas:** `tests_cloud/test_local_docker_pilot.py` y batería CI. No usar `down -v`, comandos prune ni publicar puertos de la red local. Ensayo físico pendiente.
