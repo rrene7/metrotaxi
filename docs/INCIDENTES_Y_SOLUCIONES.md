@@ -126,3 +126,10 @@ El pasajero ya no recibe ofertas ni datos del conductor antes de la aceptación;
 - **Causa:** carreras asíncronas entre `/api/driver/location` y `/api/driver/location/stop`, callbacks del watch anteriores aún activos y detención remota fallida silenciada.
 - **Corrección:** invalidación de generación GPS antes de esperar, liquidación de carga pendiente previa al POST de detención, exclusión de arranques simultáneos, aviso al conductor cuando la detención en servidor no se confirma y no restaurar marcadores con respuestas antiguas.
 - **Control:** `tests_cloud/test_driver_gps_stop_race.cjs` y recorrido manual en Chrome/Android con conexión intermitente; nunca afirmar que la API confirmó detención si devolvió error.
+
+
+## DRIVER-116 — Lista de conductor mezclaba trabajos actuales e históricos (21-11-2026)
+
+- **Causa:** el frontend representaba todas las carreras devueltas por `/api/mine` en una misma lista y dejaba seleccionada una carrera finalizada.
+- **Solución:** paneles independientes, filtro de estados `done/cancelled` hacia historial, listado operativo de servicios activos con sus controles existentes, y limpieza de selección de mapa al cerrar la carrera.
+- **Prueba:** `tests_cloud/test_driver_history_tabs.cjs` y validación visual pendiente en navegador y Android físico. No requiere migración ni modifica la API.
