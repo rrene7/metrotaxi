@@ -66,4 +66,25 @@ tabs[1].click();
 assert.equal(get('passenger-body').hidden,true);
 assert.equal(get('passenger-history').hidden,false);
 assert.match(get('history-list').children[0].textContent,/Finalizada/);
+// Regression: the map library can exist but fail at runtime (blocked tiles,
+// missing container, incompatible plugin). Trip operations must still boot.
+const failingNodes=new Map();
+const failingGet=id=>{if(!failingNodes.has(id))failingNodes.set(id,new Element(id));return failingNodes.get(id)};
+const failingRoles=['cliente','central','conductor'].map(role=>{const el=new Element(role);el.dataset.role=role;return el});
+const failingTabs=['active','history'].map(tab=>{const el=new Element(tab);el.dataset.passTab=tab;return el});
+const failingDocument={
+ getElementById:failingGet,
+ querySelectorAll:selector=>selector==='[data-role]'?failingRoles:selector==='[data-pass-tab]'?failingTabs:[],
+ createElement:tag=>new Element(tag)
+};
+const failingWindow={L:{map:()=>{throw Error('Map renderer unavailable')}}};
+const failingContext={document:failingDocument,window:failingWindow,L:failingWindow.L,console};
+vm.runInNewContext(code,failingContext,{filename:'demo.js',timeout:3000});
+assert.match(failingGet('tile-status').textContent,/continuar la simulaci[oó]n/i,'Map failure must be explicit and non-blocking');
+const request=failingGet('actions').children.find(b=>b.textContent==='Solicitar taxi');
+assert(request&&!request.disabled,'Passenger can still request when map initialization fails');
+request.click();
+assert.match(failingGet('trip-status').textContent,/buscando un taxi/i,'Passenger receives state even without map');
+failingRoles[1].click();
+assert(failingGet('actions').children.some(b=>b.textContent==='Asignar MT-01'),'Central retains dispatch buttons when map fails');
 console.log('OK: passenger UI renders, internal data stays private, history works and arrival gates restrict actions.');

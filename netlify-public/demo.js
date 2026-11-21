@@ -87,5 +87,14 @@ function act(a){
 }
 document.querySelectorAll('[data-role]').forEach(b=>b.addEventListener('click',()=>{role=b.dataset.role;passengerTab='active';render();}));
 document.querySelectorAll('[data-pass-tab]').forEach(b=>b.addEventListener('click',()=>{passengerTab=b.dataset.passTab;render();}));
-initMap();render();
+try {
+ initMap();
+} catch (error) {
+ // Map failures are optional: the trip controls must remain usable.
+ map=null;
+ mapEl.textContent='Mapa temporalmente no disponible';
+ $$('tile-status').textContent='No se pudo abrir el mapa. Puedes continuar la simulación sin él.';
+ console.error('Metro Taxi: mapa no disponible',error);
+}
+render();
 })();
