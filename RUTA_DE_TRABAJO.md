@@ -275,3 +275,5 @@ En Linux/macOS o CI, ejecutar **ambos** comandos: `python scripts/validar_entreg
 | 21-11-2026 | LIVE-122 | Refresco incremental de paneles pasajero/central/conductor (sin reconstruir DOM ante datos idénticos) y versiones de JS para evitar caché | Pruebas JS/Python añadidas; CI y prueba manual por confirmar | Abrir tres sesiones y verificar cambios de estado sin perder foco ni pestañas; Android real pendiente |
 
 | 21-11-2026 | ALERTS-123 | Aviso de nuevas ofertas para conductor y nuevas solicitudes para central, sin recargas y sin avisos repetidos; sonido/notificación opcionales por acción explícita | Pruebas JS/Python añadidas, CI pendiente | Validar en Chrome y Android; no hay push con app cerrada ni aviso garantizado en segundo plano |
+
+| 21-11-2026 | SESSION-124 | Corrige redirección cíclica entre Acceso del personal y Central al compartir cookie con pasajero; cada panel deriva sesiones ajenas a su pantalla autorizada, sin quitar validación API | Regresión JS `tests_cloud/test_role_redirect_loop.cjs` + CI | Validación manual con perfiles Chrome separados; no equivale a sesiones simultáneas en pestañas de mismo perfil |

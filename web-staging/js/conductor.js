@@ -2,7 +2,10 @@
  const M=MTCloud,el=id=>document.getElementById(id);let busy=false,gpsWatch=null,lastSent=0,gpsSending=false,gpsGeneration=0,gpsInFlight=null,gpsStopping=null,currentDriver=null,allTrips=[],selected=null,lastMapSelection=null;
  const alerts=MTAlerts.make({kind:'driver',element:el('new-trip-alert'),button:el('enable-alerts'),selector:t=>t.status==='offered' });
  const map=MetroMap.make({id:'map-conductor'});
- try{const s=await M.me();if(!s.authenticated||s.user.role!=='driver'){location.replace('/ingresar.html');return;}}
+ try{const s=await M.me();if(!s.authenticated){location.replace('/ingresar.html');return;}
+  if(s.user.role!=='driver'){
+   location.replace(s.user.role==='customer'?'/cliente.html':'/central.html');return;
+  }}
  catch(e){M.notice(e.message,true);return;}
  function canAct(t,act){return !['start','complete'].includes(act)||Boolean(t.arrival?.[act]?.allowed)}
  const actions={offered:[['accept','Aceptar'],['reject','Rechazar']],accepted:[['start','Iniciar carrera']],inprogress:[['complete','Finalizar carrera']]};

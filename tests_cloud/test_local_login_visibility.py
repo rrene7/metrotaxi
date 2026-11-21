@@ -13,7 +13,7 @@ class LocalLoginVisibilityTests(unittest.TestCase):
         self.assertIn('Mostrar contraseña', html)
         self.assertIn('autocomplete="current-password"', html)
         self.assertIn('/js/api.js?v=local-120', html)
-        self.assertIn('/js/login.js?v=local-120', html)
+        self.assertIn('/js/login.js?v=session-124', html)
 
     def test_password_is_not_trimmed_or_logged(self):
         script = (ROOT / 'web-staging/js/login.js').read_text(encoding='utf-8')
