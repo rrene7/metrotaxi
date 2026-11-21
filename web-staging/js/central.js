@@ -34,8 +34,22 @@
 
  try{const s=await M.me();if(!s.authenticated||!['admin','operator'].includes(s.user.role)){location.replace('/ingresar.html');return;}}
  catch(e){M.notice(e.message,true);return;}
- async function load(){if(busy)return;busy=true;
+ function hasPendingCentralEdits(){
+  if(pointEdit)return true;
+  for(const id of ['trips','drivers']){
+   const area=el(id);
+   if(document.activeElement&&area.contains(document.activeElement))return true;
+   for(const field of area.querySelectorAll('input,select,textarea')){
+    if(field.type==='file'){if(field.files&&field.files.length)return true;continue;}
+    if(field.tagName==='SELECT'){if(field.selectedIndex>0)return true;continue;}
+    if(field.value!==field.defaultValue)return true;
+   }
+  }
+  return false;
+ }
+ async function load({automatic=false}={}){if(busy||(automatic&&hasPendingCentralEdits()))return;busy=true;
   try{const [tr,dr,st,ms]=await Promise.all([M.api('/api/trips'),M.api('/api/fleet'),M.api('/api/stats'),M.api('/api/messages')]);
+   if(automatic&&hasPendingCentralEdits())return; // Edits may start while API requests are pending.
    rides=tr.trips;units=dr.drivers;messageInbox=ms.messages;
    M.text('pending-count',rides.filter(t=>t.status==='pending').length);
    M.text('offered-count',rides.filter(t=>t.status==='offered').length);
@@ -106,5 +120,5 @@ ${['pending','offered','accepted','inprogress'].includes(t.status)?`<button clas
    }catch(err){M.notice(err.message,true);}
  });
  el('map-refresh').addEventListener('click',load);el('refresh').addEventListener('click',load);el('logout').addEventListener('click',async()=>{try{await M.logout()}catch(e){M.notice(e.message,true)}});
- await load();setInterval(()=>{if(!document.hidden)load()},10000);
+ await load();setInterval(()=>{if(!document.hidden)load({automatic:true})},10000);
 })();

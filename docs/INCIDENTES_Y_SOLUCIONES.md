@@ -104,3 +104,10 @@ El pasajero ya no recibe ofertas ni datos del conductor antes de la aceptación;
 - **Solución:** manejar el fallo durante `initMap()`, avisar que el mapa no está disponible y continuar con `render()`.
 - **Prevención:** prueba Node que fuerza el fallo y verifica que solicitar/asignar conserva funcionalidad; revisión del hash del JS para despliegue sin caché incompatible.
 - **Pendiente:** ejecución de CI y recorrido visual en la URL pública; no equivale a validación de mapa/GPS real.
+
+
+## CENTRAL-113 — Refresco del tablero destruye operaciones en curso (21-11-2026)
+
+- **Causa:** reconstrucción periódica de `#trips` y `#drivers` mediante `innerHTML` mientras el operador escribía una tarifa, elegía una unidad o editaba un vehículo.
+- **Corrección:** diferenciar refresco programado de manual y omitir el automático con editor abierto, foco activo o formulario sin guardar. Revisar de nuevo el bloqueo después de la respuesta de la API para evitar una condición de carrera.
+- **Control:** `tests_cloud/test_central_autorefresh_guard.cjs` ejecutado por `scripts/validar_cloud.py`; verificar visualmente selección, edición y guardado en 2 navegadores. No sustituye pruebas en el navegador.
