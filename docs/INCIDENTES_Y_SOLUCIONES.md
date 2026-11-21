@@ -169,3 +169,10 @@ El pasajero ya no recibe ofertas ni datos del conductor antes de la aceptación;
 - **Causa:** la única red de ambos contenedores era `internal: true`, que impedía el tráfico desde el host hasta el puerto publicado, aunque estuviera ligado a 127.0.0.1.
 - **Corrección:** mantener a `db` exclusivamente en `metro_private` interna y conectar la API también a `metro_loopback` de tipo bridge. Su única publicación de puerto permanece `127.0.0.1:8770:8080`; PostgreSQL no publica puertos.
 - **Control:** `test_local_docker_pilot.py` exige ambas redes y el trabajo real de CI valida acceso HTTP; no cambiar a `0.0.0.0` ni publicar 5432.
+
+## LOCAL-120 — Diagnóstico de acceso del administrador en Chrome (21-11-2026)
+
+- Observación en Windows: `adminmetro` existe; la contraseña coincide con el hash en PostgreSQL; `POST /api/login` dentro del contenedor respondió `HTTP 200` y entregó el rol `admin`, pero el formulario de Chrome siguió mostrando `Credenciales incorrectas`. No se ha demostrado una causa raíz definitiva: puede diferir el contenido de contraseña introducido en el navegador, y una prueba anterior desde PowerShell devolvió 500.
+- Corrección de usabilidad y observabilidad: control optativo «Mostrar contraseña» para verificar visualmente lo introducido, desactivar autocorrección/capitalización, preservar la contraseña sin transformaciones, evitar envíos simultáneos y forzar scripts actualizados mediante versión. Sin registrar ni mostrar credenciales en logs.
+- Prueba de regresión: `tests_cloud/test_local_login_visibility.py`; pruebas de API existentes siguen exigiendo validación de hash, sesión y CSRF.
+- Estado: pendiente comprobar manualmente el inicio de sesión en el Chrome del usuario tras actualizar Docker. Si continúa rechazando, inspeccionar exclusivamente estado HTTP y respuesta, nunca la contraseña ni Payload.

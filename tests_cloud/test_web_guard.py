@@ -20,7 +20,10 @@ class CloudWebChecks(unittest.TestCase):
                 if path.startswith('https://'):
                     self.assertEqual(path, 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css', (html, path))
                 else:
-                    self.assertTrue((WEB/path.lstrip('/')).is_file(), (html,path))
+                    self.assertFalse(path.startswith('//'), (html,path))
+                    parsed=urlparse(path)
+                    self.assertFalse(parsed.scheme or parsed.netloc, (html,path))
+                    self.assertTrue((WEB/parsed.path.lstrip('/')).is_file(), (html,path))
     def test_no_cross_role_exposure(self):
         driver=(WEB/'js/conductor.js').read_text()
         self.assertNotIn(".phone",driver)
