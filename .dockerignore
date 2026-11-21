@@ -24,3 +24,4 @@ static/
 tests/
 tests_cloud/
 docs/
+metro-local.env
