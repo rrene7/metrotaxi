@@ -71,3 +71,6 @@ docker compose --env-file metro-local.env -f compose.local.yaml start
 GitHub Actions ejecuta ahora, además de las pruebas Python/JS, un trabajo `docker-local-smoke` con contenedores reales **en un runner descartable**. Crea PostgreSQL vacío y credenciales ficticias, comprueba login, seguridad de Origin/Host y que la sesión persista tras detener y arrancar contenedores. No elimina volúmenes. El trabajo solo corre tras aprobar el bloque de pruebas existente.
 
 **La prueba de GitHub no equivale a Docker Desktop Windows:** sigue siendo obligatorio verificar el arranque y el historial en tu equipo antes de utilizar el piloto. La base y contraseñas del runner son independientes de la PC del propietario.
+
+
+**Nota de redes (LOCAL-119):** PostgreSQL solo se conecta a `metro_private` interna; la aplicación se conecta adicionalmente a `metro_loopback` para recibir solicitudes publicadas exclusivamente en `127.0.0.1:8770`. No publiques el puerto 5432 ni cambies la dirección a `0.0.0.0`.
