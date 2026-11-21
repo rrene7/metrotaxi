@@ -44,6 +44,14 @@ class LocalDockerPilotChecks(unittest.TestCase):
         self.assertIn("127.0.0.1", source)
         self.assertIn("StaticFiles(", source)
 
+    def test_factory_only_prevents_cli_from_building_unrelated_public_app(self):
+        compose = (ROOT / "compose.local.yaml").read_text(encoding="utf-8")
+        api = (ROOT / "cloud/app.py").read_text(encoding="utf-8")
+        self.assertIn('METRO_FACTORY_ONLY: "1"', compose)
+        self.assertIn("os.environ.get('METRO_FACTORY_ONLY') != '1'", api)
+        self.assertIn("app = create_app()", api)
+        self.assertIn("app = None", api)
+
     def test_real_docker_smoke_is_mandatory_after_unit_tests(self):
         ci = (ROOT / ".github/workflows/validar.yml").read_text(encoding="utf-8")
         smoke = (ROOT / "scripts/smoke_local_docker.py").read_text(encoding="utf-8")
