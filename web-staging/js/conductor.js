@@ -1,5 +1,6 @@
 'use strict';(async()=>{
  const M=MTCloud,el=id=>document.getElementById(id);let busy=false,gpsWatch=null,lastSent=0,gpsSending=false,gpsGeneration=0,gpsInFlight=null,gpsStopping=null,currentDriver=null,allTrips=[],selected=null,lastMapSelection=null;
+ const alerts=MTAlerts.make({kind:'driver',element:el('new-trip-alert'),button:el('enable-alerts'),selector:t=>t.status==='offered' });
  const map=MetroMap.make({id:'map-conductor'});
  try{const s=await M.me();if(!s.authenticated||s.user.role!=='driver'){location.replace('/ingresar.html');return;}}
  catch(e){M.notice(e.message,true);return;}
@@ -38,6 +39,7 @@
  async function load(){if(busy)return;busy=true;
   try{const data=await M.api('/api/mine'),d=data.driver;currentDriver=d;allTrips=data.trips;
    M.setHtml('unit',`<strong>${M.esc(d.unit)} · ${M.esc(d.name)}</strong><p>${M.esc(d.station)} · ${M.esc(d.status)}</p><p>${M.esc(d.vehicle_make||'Vehículo pendiente')} ${M.esc(d.vehicle_model||'')} · ${M.esc(d.plate||'Placa pendiente')}</p><p class="muted">GPS: ${d.gps_recent?M.esc(d.last_location_at):'Sin posición reciente'}</p>`);
+   alerts.observe(data.trips);
    const grouped=partitionDriverTrips(data.trips);
    M.setHtml('trips',grouped.active.length?grouped.active.map(t=>{
     const pick=t.status==='accepted'?M.link(t.pickup_lat,t.pickup_lng):null;
