@@ -101,7 +101,7 @@ def main():
                 "Existing account/session disappeared after container restart")
             print("LOCAL-119 OK: Docker/PostgreSQL boot, Origin/Host/session, persistence")
         finally:
-            # Stop only. Never delete named volumes or run 'down -v'.
+            # Stop only. Never delete or prune named volumes.
             run(compose, "stop", "app", "db")
 
 
