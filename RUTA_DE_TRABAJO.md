@@ -252,3 +252,18 @@ En Linux/macOS o CI, ejecutar **ambos** comandos: `python scripts/validar_entreg
 - Primera instalación manual mediante `cloud.manage --init-schema` sobre base vacía y creación interactiva de cuentas admin/operador/conductor. `docs/PILOTO_DOCKER_LOCAL.md` contiene comandos de Windows y recuperación sin eliminación de volúmenes.
 - Regresión `tests_cloud/test_local_docker_pilot.py` verifica red/puertos, persistencia, exclusiones de secretos y ausencia de bootstrap implícito. Ejecutar CI; pruebas manuales con Docker Desktop en el equipo y en teléfonos HTTPS continúan pendientes.
 - La cuenta Render detectada pertenece a un espacio institucional distinto; no se utilizará para Metro Taxi sin autorización expresa. No se creó servicio Render ni base externa.
+
+
+## LOCAL-119 — prueba real automatizada de arranque Docker (21-11-2026)
+
+- LOCAL-118 solo tenía pruebas estáticas: no ejecutaba contenedores de PostgreSQL ni verificaba las cookies en una API levantada. Riesgo de que el piloto fallara en su primer arranque o perdiera la sesión al reiniciar.
+- Nuevo script `scripts/smoke_local_docker.py` **exclusivamente para runner efímero de GitHub Actions**: valida Compose, construye API, inicia Postgres, crea esquema inicial en base vacía, crea administrador ficticio, comprueba HTTP/login/Origin/Host/cookie, reinicia contenedores y confirma persistencia de la sesión.
+- Workflow `.github/workflows/validar.yml`: trabajo separado `docker-local-smoke` tras la batería existente, sin credenciales reales y sin eliminar volúmenes. Se registra un control estático en `tests_cloud/test_local_docker_pilot.py`.
+- No se ejecutó Docker Desktop del usuario, no se habilitó hosting, no se cambió infraestructura de producción ni se tocaron `runtime/` o volúmenes locales. Antes de integrar a main revisar ambos trabajos CI, incluidos logs de Docker; test visual móvil sigue pendiente.
+
+
+### Revisión LOCAL-119 tras pruebas reales de Compose
+
+- CI reveló dos problemas no cubiertos por pruebas estáticas: import de `cloud.app` desde el CLI de bootstrap requería configuración HTTPS de una API ajena al modo local; se añadió `METRO_FACTORY_ONLY=1` únicamente a Compose local para evitar esa construcción implícita y conservar los controles en `create_app`.
+- La red `internal: true` aplicada también a la API impidió conectar el navegador del host pese a tener `ports: 127.0.0.1:8770`; se añadió la red `metro_loopback` a `app`, manteniendo `db` solo en `metro_private` interna y sin puerto de BD.
+- Estas reparaciones están en PR y requieren nuevas pruebas reales de `docker-local-smoke`; no declarar sistema operativo hasta CI completo en verde. Volúmenes y datos reales no modificados.

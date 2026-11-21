@@ -76,3 +76,11 @@ scripts\validar_entrega.bat
 - [ ] Completar flujo ficticio de tres roles y geocerca, y documentar limitaciones del GPS de escritorio.
 
 Estas casillas permanecen pendientes hasta disponer de pruebas reales en el equipo.
+
+
+## LOCAL-119 — comprobación del CI Docker antes de instalar
+
+- [ ] Confirmar que el PR correspondiente muestra ambos trabajos `pruebas` y `docker-local-smoke` en verde, con bootstrap/login/reinicio sin errores.
+- [ ] En el equipo Windows, revisar el puerto 8770, cuentas ficticias, sesión después de reiniciar y datos de prueba persistidos, sin eliminar volúmenes.
+
+No se marcan estas comprobaciones como ejecutadas en Windows solo porque CI pase.
